@@ -1,0 +1,3107 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="tool">
+  <meta name="design-style" content="aurora">
+  <title>拉姆齊遊戲互動拓撲實驗室 | Ramsey &amp; Sim Graph Theory Lab</title>
+
+  <!-- Google Fonts: Instrument Sans (Headings), Plus Jakarta Sans (Body), Geist Mono (Code/Labels) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons (Approved CDN) -->
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+
+      /* Aurora Dark Oceanic Slate Tokens */
+      --background: #0c1214;
+      --surface-container-low: #111a1e;
+      --surface-container: #152024;
+      --surface-container-high: #1c2a30;
+      --surface-elevated: #24343b;
+
+      /* Ink / Typography */
+      --on-surface: #edf3f5;
+      --on-surface-variant: #94a8b0;
+      --on-surface-muted: #647b85;
+
+      /* Borders & Dividers */
+      --outline: #38515c;
+      --outline-variant: #213138;
+      --outline-subtle: #19272d;
+
+      /* Accents & Brand */
+      --primary: #63c7d6;
+      --on-primary: #081214;
+      --primary-container: #163840;
+      --on-primary-container: #c7f0f7;
+      --secondary: #5d7882;
+      --tertiary: #87d69b;
+      --on-tertiary: #081a0f;
+      --warning: #f59e0b;
+      --error: #f27474;
+
+      /* Ramsey Specific Palette */
+      --player-red: #f87171;
+      --player-red-glow: rgba(248, 113, 113, 0.45);
+      --player-red-bg: rgba(248, 113, 113, 0.12);
+      --player-blue: #38bdf8;
+      --player-blue-glow: rgba(56, 189, 248, 0.45);
+      --player-blue-bg: rgba(56, 189, 248, 0.12);
+      --mine-double: #fbbf24;
+      --mine-double-glow: rgba(251, 191, 36, 0.5);
+      --mine-double-bg: rgba(251, 191, 36, 0.15);
+      --edge-uncolored: #2a3c44;
+      --edge-hover: #486573;
+
+      /* Typography Setup */
+      --font-headline: 'Instrument Sans', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-label: 'Geist Mono', monospace;
+
+      /* Radii */
+      --rounded-sm: 0.375rem;
+      --rounded: 0.5rem;
+      --rounded-lg: 0.75rem;
+      --rounded-xl: 1rem;
+      --rounded-full: 9999px;
+
+      /* Aurora Effects & Spacing */
+      --panel-gradient: linear-gradient(180deg, #162226 0%, #111a1e 100%);
+      --card-gradient: linear-gradient(180deg, #1a272c 0%, #141f23 100%);
+      --glow-cyan: 0 0 20px rgba(99, 199, 214, 0.25);
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 0.875rem;
+      --space-lg: 1.25rem;
+      --space-xl: 1.75rem;
+      --space-2xl: 2.5rem;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: clip;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container Layout */
+    .lab-app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: var(--space-md);
+      gap: var(--space-md);
+    }
+
+    /* Top Navigation / App Header */
+    .app-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--panel-gradient);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded-lg);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .brand-logo-icon {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--player-red) 0%, var(--player-blue) 100%);
+      color: #081214;
+      border-radius: var(--rounded);
+      box-shadow: 0 0 16px rgba(99, 199, 214, 0.3);
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-headline);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--on-surface);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .brand-text p {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Status Banner / Turn HUD */
+    .status-hud {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      background: var(--surface-container-high);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded);
+      padding: 0.4rem 0.875rem;
+    }
+
+    .turn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 0.825rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--rounded-full);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .turn-pill.red-turn {
+      background: var(--player-red-bg);
+      color: var(--player-red);
+      border: 1px solid var(--player-red);
+      box-shadow: 0 0 8px var(--player-red-glow);
+    }
+
+    .turn-pill.blue-turn {
+      background: var(--player-blue-bg);
+      color: var(--player-blue);
+      border: 1px solid var(--player-blue);
+      box-shadow: 0 0 8px var(--player-blue-glow);
+    }
+
+    .turn-pill.game-over-turn {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+
+    .hud-meta {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    .hud-meta span.highlight {
+      font-family: var(--font-label);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Top Control Ribbon */
+    .control-ribbon {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: 0.6rem var(--space-md);
+      background: var(--surface-container-low);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .control-label {
+      font-family: var(--font-label);
+      font-size: 0.725rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-muted);
+      margin-right: 0.2rem;
+    }
+
+    /* Button and Input Styling */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--rounded-sm);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--outline);
+      background: var(--surface-container);
+      color: var(--on-surface);
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+      user-select: none;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--surface-container-high);
+      border-color: var(--primary);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn.btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .btn.btn-primary:hover:not(:disabled) {
+      background: #7ae0ed;
+      border-color: #7ae0ed;
+    }
+
+    .btn.btn-active {
+      background: var(--primary-container);
+      border-color: var(--primary);
+      color: var(--on-primary-container);
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .select-input {
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--rounded-sm);
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      background: var(--surface-container);
+      color: var(--on-surface);
+      border: 1px solid var(--outline);
+      cursor: pointer;
+    }
+
+    .select-input:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Main Grid: Topology Canvas + Side Workbench */
+    .workbench-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr);
+      gap: var(--space-md);
+      flex: 1;
+      min-height: 0;
+    }
+
+    @media (max-width: 1040px) {
+      .workbench-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* Left: SVG Canvas Container */
+    .canvas-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-gradient);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded-lg);
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+
+    .canvas-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      padding: 0.6rem var(--space-md);
+      background: var(--surface-container-low);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .canvas-title-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .canvas-title {
+      font-family: var(--font-headline);
+      font-size: 0.925rem;
+      font-weight: 600;
+      color: var(--on-surface);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .canvas-viewport-wrapper {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 580px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 50%, #16242a 0%, #0c1214 85%);
+      user-select: none;
+      touch-action: none;
+    }
+
+    svg#topologySvg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    /* Canvas Overlays & Floating Tools */
+    .canvas-floating-dock {
+      position: absolute;
+      bottom: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      background: rgba(17, 26, 30, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 0.35rem 0.6rem;
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded-full);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      z-index: 10;
+    }
+
+    .canvas-legend-dock {
+      position: absolute;
+      top: var(--space-sm);
+      left: var(--space-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      background: rgba(17, 26, 30, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      font-size: 0.75rem;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: var(--rounded-full);
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    /* SVG Elements Styling */
+    .edge-hit-area {
+      stroke: transparent;
+      stroke-width: 22px;
+      stroke-linecap: round;
+      cursor: pointer;
+      fill: none;
+    }
+
+    .edge-visual {
+      fill: none;
+      stroke-linecap: round;
+      transition: stroke 0.2s ease, stroke-width 0.2s ease, stroke-dasharray 0.2s ease;
+      pointer-events: none;
+    }
+
+    .edge-uncolored {
+      stroke: var(--edge-uncolored);
+      stroke-width: 2.2px;
+    }
+
+    .edge-hovered {
+      stroke: var(--edge-hover) !important;
+      stroke-width: 3.5px !important;
+      stroke-dasharray: 4 2;
+    }
+
+    .edge-red {
+      stroke: var(--player-red);
+      stroke-width: 4.5px;
+      filter: drop-shadow(0 0 5px var(--player-red-glow));
+    }
+
+    .edge-blue {
+      stroke: var(--player-blue);
+      stroke-width: 4.5px;
+      filter: drop-shadow(0 0 5px var(--player-blue-glow));
+    }
+
+    /* Pulsating Double Mine Edge */
+    @keyframes doubleMinePulse {
+      0% {
+        stroke-dashoffset: 0;
+        stroke: #fbbf24;
+        filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+      }
+      50% {
+        stroke-dashoffset: 12;
+        stroke: #f43f5e;
+        filter: drop-shadow(0 0 9px rgba(244, 63, 94, 0.7));
+      }
+      100% {
+        stroke-dashoffset: 24;
+        stroke: #fbbf24;
+        filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+      }
+    }
+
+    .edge-double-mine {
+      stroke-width: 3.5px !important;
+      stroke-dasharray: 6 3;
+      animation: doubleMinePulse 1.8s infinite linear;
+    }
+
+    /* Graph Nodes */
+    .graph-node-group {
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.05s ease-out;
+    }
+
+    .graph-node-group:active {
+      cursor: grabbing;
+    }
+
+    .node-outer-halo {
+      fill: transparent;
+      stroke: var(--primary);
+      stroke-width: 1.5px;
+      opacity: 0;
+      transition: opacity 0.2s ease, r 0.2s ease;
+    }
+
+    .graph-node-group:hover .node-outer-halo {
+      opacity: 0.6;
+      r: 28px;
+    }
+
+    .node-circle {
+      fill: #16242a;
+      stroke: var(--outline);
+      stroke-width: 2.5px;
+      transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+    }
+
+    .graph-node-group:hover .node-circle {
+      stroke: var(--primary);
+      fill: #1d3139;
+    }
+
+    .node-circle.node-selected {
+      stroke: var(--tertiary) !important;
+      stroke-width: 3.5px !important;
+      fill: #153326 !important;
+    }
+
+    .node-text {
+      fill: var(--on-surface);
+      font-family: var(--font-label);
+      font-weight: 700;
+      font-size: 14px;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+    }
+
+    /* Triangle Loss Highlight Polygon */
+    @keyframes fatalTriangleFlash {
+      0% { opacity: 0.35; stroke-width: 4px; }
+      50% { opacity: 0.85; stroke-width: 7px; }
+      100% { opacity: 0.35; stroke-width: 4px; }
+    }
+
+    .fatal-triangle {
+      fill-opacity: 0.28;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      animation: fatalTriangleFlash 1.4s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    .fatal-triangle.fatal-red {
+      fill: var(--player-red);
+      stroke: var(--player-red);
+      filter: drop-shadow(0 0 12px var(--player-red-glow));
+    }
+
+    .fatal-triangle.fatal-blue {
+      fill: var(--player-blue);
+      stroke: var(--player-blue);
+      filter: drop-shadow(0 0 12px var(--player-blue-glow));
+    }
+
+    /* Edge Midpoint Double-Mine Badge */
+    .mine-badge-group {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .mine-badge-bg {
+      fill: #1c2214;
+      stroke: var(--warning);
+      stroke-width: 1.5px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+    }
+
+    .mine-badge-text {
+      font-family: var(--font-label);
+      font-size: 11px;
+      font-weight: 700;
+      fill: var(--warning);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    /* Dynamic Draw Preview Line */
+    .draw-preview-line {
+      stroke: var(--primary);
+      stroke-width: 2.5px;
+      stroke-dasharray: 5 4;
+      pointer-events: none;
+      opacity: 0.8;
+    }
+
+    /* Right: Workbench Control Tabs */
+    .workbench-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--panel-gradient);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded-lg);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      min-height: 580px;
+    }
+
+    .tab-nav {
+      display: flex;
+      background: var(--surface-container-low);
+      border-bottom: 1px solid var(--outline-variant);
+      padding: 0 var(--space-xs);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.75rem 0.5rem;
+      font-family: var(--font-body);
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: var(--on-surface-variant);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--on-surface);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(99, 199, 214, 0.05);
+    }
+
+    .tab-content {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      padding: var(--space-md);
+      overflow-y: auto;
+      gap: var(--space-md);
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Tab 1: Move History & Notation */
+    .history-card {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-card-header {
+      padding: 0.6rem var(--space-md);
+      background: var(--surface-container-high);
+      border-bottom: 1px solid var(--outline-variant);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .first-player-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      color: var(--on-surface);
+      background: var(--surface-container-low);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--rounded-sm);
+      border: 1px solid var(--outline);
+    }
+
+    .move-log-container {
+      max-height: 380px;
+      overflow-y: auto;
+      font-family: var(--font-label);
+    }
+
+    .move-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .move-table th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-container-high);
+      color: var(--on-surface-variant);
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.5rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--outline);
+      z-index: 2;
+    }
+
+    .move-table td {
+      padding: 0.45rem 0.6rem;
+      border-bottom: 1px solid var(--outline-subtle);
+      white-space: nowrap;
+    }
+
+    .move-row {
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .move-row:hover {
+      background: var(--surface-container-high);
+    }
+
+    .move-row.current-step {
+      background: rgba(99, 199, 214, 0.12);
+      border-left: 3px solid var(--primary);
+    }
+
+    .move-color-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: var(--rounded-sm);
+      font-size: 0.725rem;
+      font-weight: 600;
+    }
+
+    .move-color-badge.badge-red {
+      background: var(--player-red-bg);
+      color: var(--player-red);
+      border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    .move-color-badge.badge-blue {
+      background: var(--player-blue-bg);
+      color: var(--player-blue);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .double-mine-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-size: 0.725rem;
+      font-weight: 700;
+      color: var(--mine-double);
+      background: var(--mine-double-bg);
+      border: 1px solid var(--mine-double);
+      border-radius: var(--rounded-sm);
+      padding: 0.1rem 0.4rem;
+    }
+
+    .notation-copy-box {
+      margin-top: var(--space-sm);
+      padding: var(--space-sm);
+      background: var(--surface-container-low);
+      border: 1px dashed var(--outline);
+      border-radius: var(--rounded);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .notation-string {
+      font-family: var(--font-label);
+      font-size: 0.775rem;
+      color: var(--primary);
+      word-break: break-all;
+      background: #090e10;
+      padding: 0.4rem 0.6rem;
+      border-radius: var(--rounded-sm);
+      border: 1px solid var(--outline-variant);
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    /* Tab 2: Mine Radar & Threat Matrix */
+    .radar-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .stat-tile {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .stat-tile.hazard-tile {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(244, 63, 94, 0.12) 100%);
+      border-color: var(--warning);
+    }
+
+    .stat-label {
+      font-family: var(--font-label);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .stat-value {
+      font-family: var(--font-headline);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--on-surface);
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .stat-subtext {
+      font-size: 0.725rem;
+      color: var(--on-surface-muted);
+    }
+
+    .active-mines-box {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .active-mines-box h4 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--warning);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .mines-pill-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      min-height: 32px;
+      align-items: center;
+    }
+
+    .mine-interactive-pill {
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.55rem;
+      border-radius: var(--rounded-sm);
+      background: var(--mine-double-bg);
+      color: var(--mine-double);
+      border: 1px solid var(--mine-double);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+
+    .mine-interactive-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 10px var(--mine-double-glow);
+    }
+
+    /* Adjacency Matrix View */
+    .matrix-wrapper {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-sm);
+      overflow-x: auto;
+    }
+
+    .adj-matrix-table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      font-family: var(--font-label);
+      font-size: 0.725rem;
+    }
+
+    .adj-matrix-table th, .adj-matrix-table td {
+      width: 28px;
+      height: 28px;
+      text-align: center;
+      vertical-align: middle;
+      border: 1px solid var(--outline-subtle);
+    }
+
+    .adj-matrix-table th {
+      background: var(--surface-container-high);
+      color: var(--on-surface-variant);
+      font-weight: 700;
+    }
+
+    .matrix-cell-empty {
+      background: var(--surface-container-low);
+      color: var(--on-surface-muted);
+    }
+
+    .matrix-cell-red {
+      background: var(--player-red-bg);
+      color: var(--player-red);
+      font-weight: 700;
+    }
+
+    .matrix-cell-blue {
+      background: var(--player-blue-bg);
+      color: var(--player-blue);
+      font-weight: 700;
+    }
+
+    .matrix-cell-double-mine {
+      background: var(--mine-double-bg);
+      color: var(--mine-double);
+      font-weight: 800;
+      border: 1px solid var(--mine-double) !important;
+    }
+
+    /* Tab 3: Ramsey Theory Explainer */
+    .theory-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      color: var(--on-surface-variant);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .theory-card {
+      background: var(--surface-container);
+      border: 1px solid var(--outline-variant);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .theory-card h3 {
+      font-family: var(--font-headline);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .theory-formula-callout {
+      font-family: var(--font-label);
+      font-size: 0.825rem;
+      background: #090e10;
+      border-left: 3px solid var(--primary);
+      padding: 0.5rem 0.75rem;
+      color: var(--on-surface);
+      border-radius: 0 var(--rounded-sm) var(--rounded-sm) 0;
+    }
+
+    /* Modal / Alert Dialog */
+    .game-dialog-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 18, 20, 0.82);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: var(--space-md);
+    }
+
+    .game-dialog-overlay.show {
+      display: flex;
+    }
+
+    .game-dialog-box {
+      width: 100%;
+      max-width: 480px;
+      background: var(--panel-gradient);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded-lg);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+      padding: var(--space-xl);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-md);
+      animation: dialogPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dialogPop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dialog-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--rounded-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+    }
+
+    .dialog-icon.winner-red {
+      background: var(--player-red-bg);
+      color: var(--player-red);
+      border: 2px solid var(--player-red);
+      box-shadow: 0 0 20px var(--player-red-glow);
+    }
+
+    .dialog-icon.winner-blue {
+      background: var(--player-blue-bg);
+      color: var(--player-blue);
+      border: 2px solid var(--player-blue);
+      box-shadow: 0 0 20px var(--player-blue-glow);
+    }
+
+    .dialog-icon.winner-draw {
+      background: rgba(135, 214, 155, 0.15);
+      color: var(--tertiary);
+      border: 2px solid var(--tertiary);
+    }
+
+    .dialog-title {
+      font-family: var(--font-headline);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+
+    .dialog-desc {
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Live Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: var(--space-md);
+      right: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      z-index: 1050;
+      pointer-events: none;
+    }
+
+    .toast-pill {
+      background: rgba(21, 32, 36, 0.95);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--warning);
+      color: var(--on-surface);
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--rounded);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      animation: toastSlideIn 0.25s ease-out;
+    }
+
+    @keyframes toastSlideIn {
+      0% { transform: translateY(-10px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Tooltip */
+    #hoverTooltip {
+      position: absolute;
+      background: rgba(12, 18, 20, 0.94);
+      border: 1px solid var(--outline);
+      border-radius: var(--rounded-sm);
+      padding: 0.35rem 0.6rem;
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      color: var(--on-surface);
+      pointer-events: none;
+      display: none;
+      z-index: 30;
+      white-space: nowrap;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+      transform: translate(-50%, -130%);
+    }
+
+    /* Focus & Accessibility */
+    button:focus-visible, select:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab-app">
+
+    <!-- Header Section -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo-icon" aria-hidden="true">
+          <i data-lucide="network" style="width: 22px; height: 22px;"></i>
+        </div>
+        <div class="brand-text">
+          <h1>拉姆齊遊戲互動拓撲實驗室 <span style="font-size: 0.75rem; font-weight: 500; color: var(--primary); background: var(--primary-container); padding: 0.15rem 0.45rem; border-radius: var(--rounded-sm); border: 1px solid var(--primary);">Sim &amp; Ramsey Lab</span></h1>
+          <p>完全圖 $K_n$ 拓撲動態拖曳・即時雙重地雷偵測・反向博弈 (Avoidance Game) 實驗平台</p>
+        </div>
+      </div>
+
+      <!-- Turn & Status HUD -->
+      <div class="status-hud" id="statusHud">
+        <div class="turn-pill red-turn" id="currentTurnBadge">
+          <i data-lucide="circle-dot" style="width: 14px; height: 14px;"></i>
+          <span id="turnPlayerText">紅方思考中</span>
+        </div>
+        <div class="hud-meta">
+          <span>先手: <strong id="hudFirstPlayerLabel" class="highlight">紅方</strong></span>
+          <span>|</span>
+          <span>回合: <strong id="hudTurnCounter" class="highlight">#0</strong></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Global Control Ribbon -->
+    <div class="control-ribbon">
+      <div class="control-group">
+        <span class="control-label">對弈模式</span>
+        <button class="btn btn-sm btn-active" id="modeBtn2P" onclick="setGameMode('2p')">
+          <i data-lucide="users" style="width: 13px; height: 13px;"></i> 雙人本機
+        </button>
+        <button class="btn btn-sm" id="modeBtnVsAi" onclick="setGameMode('vs-ai')">
+          <i data-lucide="bot" style="width: 13px; height: 13px;"></i> 單人 vs AI
+        </button>
+        <button class="btn btn-sm" id="modeBtnAiVsAi" onclick="setGameMode('ai-vs-ai')">
+          <i data-lucide="cpu" style="width: 13px; height: 13px;"></i> AI 觀戰演示
+        </button>
+      </div>
+
+      <div class="control-group" id="aiConfigGroup" style="display: none;">
+        <span class="control-label">AI 難度</span>
+        <select class="select-input" id="aiLevelSelect" onchange="changeAiLevel(this.value)">
+          <option value="master" selected>大師級 (Minimax 前瞻 + 雙雷封鎖)</option>
+          <option value="tactician">進階級 (啟發式防守度數平衡)</option>
+          <option value="novice">初階級 (隨機規避立即成三角)</option>
+        </select>
+        <span class="control-label" style="margin-left: 0.3rem;">玩家持色</span>
+        <button class="btn btn-sm" id="humanColorToggleBtn" onclick="toggleHumanColor()">
+          執紅 (先手)
+        </button>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">圖規模</span>
+        <select class="select-input" id="graphSelect" onchange="changeGraphSize(parseInt(this.value, 10))">
+          <option value="6" selected>K₆ (標準 Sim，定理保證無和局，15條邊)</option>
+          <option value="5">K₅ (五頂點，允許同色三角形和局，10條邊)</option>
+          <option value="7">K₇ (擴展完全圖，21條邊)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <button class="btn btn-sm" id="undoBtn" onclick="handleUndo()" title="悔棋 (Ctrl+Z)" disabled>
+          <i data-lucide="undo-2" style="width: 13px; height: 13px;"></i> 悔棋
+        </button>
+        <button class="btn btn-sm" id="redoBtn" onclick="handleRedo()" title="重做 (Ctrl+Y)" disabled>
+          <i data-lucide="redo-2" style="width: 13px; height: 13px;"></i> 重做
+        </button>
+        <button class="btn btn-sm" onclick="confirmResetGame()" title="重置本局">
+          <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i> 重新開始
+        </button>
+        <button class="btn btn-sm" id="soundToggleBtn" onclick="toggleSound()" title="音效切換">
+          <i data-lucide="volume-2" style="width: 13px; height: 13px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Workbench Area -->
+    <div class="workbench-grid">
+
+      <!-- Left Column: Interactive Topology Canvas -->
+      <section class="canvas-panel">
+        <div class="canvas-header">
+          <div class="canvas-title-group">
+            <span class="canvas-title">
+              <i data-lucide="move" style="width: 15px; height: 15px; color: var(--primary);"></i>
+              拓撲畫布 (自由拖曳頂點・點擊或拖曳連線著色)
+            </span>
+          </div>
+
+          <div class="control-group">
+            <span class="control-label">標籤格式</span>
+            <select class="select-input" id="labelFormatSelect" onchange="changeLabelFormat(this.value)">
+              <option value="1-based" selected>數字 1～N (台港競賽標準)</option>
+              <option value="0-based">數字 0～N-1 (CS 索引)</option>
+              <option value="alpha">字母 A～F (圖論論文記號)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- SVG Viewport -->
+        <div class="canvas-viewport-wrapper" id="canvasContainer">
+
+          <!-- Static Legend in corner -->
+          <div class="canvas-legend-dock">
+            <div class="legend-item">
+              <div class="legend-line" style="background: var(--player-red);"></div>
+              <span>紅方已著色邊</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="background: var(--player-blue);"></div>
+              <span>藍方已著色邊</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="background: repeating-linear-gradient(45deg, #fbbf24, #fbbf24 3px, #f43f5e 3px, #f43f5e 6px);"></div>
+              <span style="color: var(--warning); font-weight: 600;">⚠️ 雙重地雷 [u,v] (雙避禁手)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: var(--surface-container-high); border: 1.5px solid var(--outline);"></div>
+              <span>拓撲頂點 (支援滑鼠/觸控拖曳)</span>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Canvas -->
+          <svg id="topologySvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <!-- Glowing Filters -->
+              <filter id="redNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="blueNeonGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <!-- Hazard Pattern for Double Mines -->
+              <pattern id="hazardPattern" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="16" stroke="#fbbf24" stroke-width="6" />
+                <line x1="8" y1="0" x2="8" y2="16" stroke="#f43f5e" stroke-width="6" />
+              </pattern>
+            </defs>
+
+            <!-- Layer 1: Fatal Monochromatic Triangle Polygon -->
+            <polygon id="fatalTrianglePolygon" class="fatal-triangle" points="" style="display: none;" />
+
+            <!-- Layer 2: All Graph Edges -->
+            <g id="edgesLayer"></g>
+
+            <!-- Layer 3: Dynamic Drawing Preview Line -->
+            <line id="drawPreviewLine" class="draw-preview-line" x1="0" y1="0" x2="0" y2="0" style="display: none;" />
+
+            <!-- Layer 4: Double Mine Badges Layer -->
+            <g id="mineBadgesLayer"></g>
+
+            <!-- Layer 5: Graph Vertices (Nodes) -->
+            <g id="nodesLayer"></g>
+          </svg>
+
+          <!-- Floating Hover Tooltip -->
+          <div id="hoverTooltip"></div>
+
+          <!-- Floating Bottom Toolbar for Canvas Layout Presets -->
+          <div class="canvas-floating-dock">
+            <button class="btn btn-sm" onclick="applyPresetLayout('circle')" title="標準正多邊形圓環佈局">
+              <i data-lucide="circle" style="width: 12px; height: 12px;"></i> 正多邊形
+            </button>
+            <button class="btn btn-sm" onclick="applyPresetLayout('dual-ring')" title="內外同心雙環拓撲">
+              <i data-lucide="disc" style="width: 12px; height: 12px;"></i> 雙環排列
+            </button>
+            <button class="btn btn-sm" onclick="applyPresetLayout('organic')" title="隨機微擾有機分佈">
+              <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i> 有機分佈
+            </button>
+            <button class="btn btn-sm" onclick="applyPresetLayout('reset')" title="重設幾何拓撲">
+              <i data-lucide="refresh-cw" style="width: 12px; height: 12px;"></i> 重設位置
+            </button>
+            <div style="width: 1px; height: 16px; background: var(--outline-variant); margin: 0 0.2rem;"></div>
+            <button class="btn btn-sm" id="safetyPreviewToggle" onclick="toggleSafetyPreview()" title="滑鼠懸停顯示地雷與落子安全度預報">
+              <i data-lucide="shield-alert" style="width: 12px; height: 12px; color: var(--tertiary);"></i> 著手預警: 開
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Diagnostics, Notation Log, & Theory Workbench -->
+      <section class="workbench-panel">
+
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav" role="tablist">
+          <button class="tab-btn active" id="tabBtnLog" onclick="switchTab('log')">
+            <i data-lucide="file-text" style="width: 14px; height: 14px;"></i> 即時記錄簿
+          </button>
+          <button class="tab-btn" id="tabBtnRadar" onclick="switchTab('radar')">
+            <i data-lucide="radar" style="width: 14px; height: 14px;"></i> 地雷雷達
+          </button>
+          <button class="tab-btn" id="tabBtnTheory" onclick="switchTab('theory')">
+            <i data-lucide="book-open" style="width: 14px; height: 14px;"></i> 定理與理論
+          </button>
+        </nav>
+
+        <!-- Tab 1: Real-Time Move History Logging Panel -->
+        <div class="tab-content active" id="tabLogContent">
+          <div class="history-card">
+            <div class="history-card-header">
+              <div class="first-player-badge">
+                <i data-lucide="flag" style="width: 13px; height: 13px; color: var(--player-red);"></i>
+                <span>先手記錄：<strong id="logFirstPlayerText" style="color: var(--player-red);">紅方 (Player 1)</strong></span>
+              </div>
+              <button class="btn btn-sm" onclick="copyMoveLogText()" title="複製標準棋譜格式到剪貼簿">
+                <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 複製棋譜
+              </button>
+            </div>
+
+            <div class="move-log-container">
+              <table class="move-table">
+                <thead>
+                  <tr>
+                    <th style="width: 44px;">#</th>
+                    <th style="width: 60px;">玩家</th>
+                    <th>著手邊 (u,v)C</th>
+                    <th>觸發雙重地雷 [u,v]</th>
+                    <th>戰略狀態</th>
+                  </tr>
+                </thead>
+                <tbody id="moveLogTableBody">
+                  <!-- Generated Rows Dynamically -->
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--on-surface-muted); padding: 2rem;">
+                      等待對局開始，點擊畫布任意灰色邊進行著色...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Plain Text Export Notation View -->
+          <div class="notation-copy-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="control-label">標準記譜串流 (Standard Ramsey Notation):</span>
+              <span style="font-size: 0.7rem; color: var(--on-surface-muted);">格式: (u,v)C + 雙重地雷標籤 [u,v]</span>
+            </div>
+            <div class="notation-string" id="notationStreamDisplay">
+              [對局待機中]
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Mine Radar & Threat Matrix -->
+        <div class="tab-content" id="tabRadarContent">
+
+          <!-- Real-Time Metrics Tiles -->
+          <div class="radar-stats-grid">
+            <div class="stat-tile hazard-tile">
+              <div class="stat-label">
+                <i data-lucide="alert-triangle" style="width: 14px; height: 14px; color: var(--warning);"></i>
+                當前雙重地雷總數 (Double-Mines)
+              </div>
+              <div class="stat-value">
+                <span id="statDoubleMinesCount" style="color: var(--warning);">0</span>
+                <span class="stat-subtext">條邊雙方皆不可碰觸</span>
+              </div>
+            </div>
+
+            <div class="stat-tile">
+              <div class="stat-label">
+                <i data-lucide="shield" style="width: 13px; height: 13px; color: var(--player-red);"></i>
+                紅方單避地雷
+              </div>
+              <div class="stat-value">
+                <span id="statRedMinesCount" style="color: var(--player-red);">0</span>
+                <span class="stat-subtext">紅走即負</span>
+              </div>
+            </div>
+
+            <div class="stat-tile">
+              <div class="stat-label">
+                <i data-lucide="shield" style="width: 13px; height: 13px; color: var(--player-blue);"></i>
+                藍方單避地雷
+              </div>
+              <div class="stat-value">
+                <span id="statBlueMinesCount" style="color: var(--player-blue);">0</span>
+                <span class="stat-subtext">藍走即負</span>
+              </div>
+            </div>
+
+            <div class="stat-tile">
+              <div class="stat-label">
+                <i data-lucide="check-circle" style="width: 13px; height: 13px; color: var(--tertiary);"></i>
+                雙方安全邊 (Safe)
+              </div>
+              <div class="stat-value">
+                <span id="statSafeEdgesCount" style="color: var(--tertiary);">15</span>
+                <span class="stat-subtext">無立即成環風險</span>
+              </div>
+            </div>
+
+            <div class="stat-tile">
+              <div class="stat-label">
+                <i data-lucide="layers" style="width: 13px; height: 13px; color: var(--on-surface-variant);"></i>
+                剩餘未著色邊
+              </div>
+              <div class="stat-value">
+                <span id="statRemainingEdgesCount">15</span>
+                <span class="stat-subtext">/ 共 <span id="statTotalEdgesCount">15</span> 條</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Double Mines List -->
+          <div class="active-mines-box">
+            <h4>
+              <i data-lucide="skull" style="width: 15px; height: 15px;"></i>
+              現存雙重地雷邊列表 (點擊邊標籤可於畫布高亮定位)
+            </h4>
+            <div class="mines-pill-cloud" id="activeMinesCloud">
+              <span style="font-size: 0.775rem; color: var(--on-surface-muted);">目前圖面上尚未產生雙重地雷邊</span>
+            </div>
+          </div>
+
+          <!-- Adjacency Matrix Mini-Inspector -->
+          <div class="matrix-wrapper">
+            <div style="font-size: 0.75rem; font-weight: 600; color: var(--on-surface-variant); margin-bottom: 0.4rem; display: flex; justify-content: space-between;">
+              <span>拓撲鄰接與威脅矩陣 (Adjacency Matrix):</span>
+              <span style="font-size: 0.7rem; color: var(--on-surface-muted);">R:紅邊 | B:藍邊 | ⚠️:雙重地雷</span>
+            </div>
+            <div id="adjacencyMatrixContainer"></div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Ramsey Theory Explainer -->
+        <div class="tab-content" id="tabTheoryContent">
+          <div class="theory-section">
+            <div class="theory-card">
+              <h3><i data-lucide="award" style="width: 16px; height: 16px;"></i> 拉姆齊數 R(3, 3) = 6 的嚴謹意義</h3>
+              <p>在圖論經典定理中，拉姆齊數 $R(3,3)=6$ 表示：<strong>對任意 6 個頂點的完全圖 $K_6$，無論如何用兩種顏色（紅、藍）替其 15 條邊著色，必定至少存在一個同色單色三角形（$K_3$）！</strong></p>
+              <div class="theory-formula-callout">
+                鴿籠原理直觀證明：<br>
+                考察 $K_6$ 任意一頂點 $v$，與其相鄰的邊共有 $6 - 1 = 5$ 條。<br>
+                依據狄利克雷鴿籠原理（Pigeonhole Principle），至少有 $\lceil 5 / 2 \rceil = 3$ 條邊同色（設為紅色，分別連接頂點 $a, b, c$）。<br>
+                此時考察 $\{a,b\}, \{b,c\}, \{c,a\}$ 三條邊：<br>
+                • 若其中任意一條為紅色 $\implies$ 與 $v$ 構成紅色三角形！<br>
+                • 若三條皆非紅色（全為藍色） $\implies$ 構成藍色單色三角形！<br>
+                故在 $K_6$ 上，<strong>絕無可能形成雙方都不形成單色三角形的和局！</strong>
+              </div>
+            </div>
+
+            <div class="theory-card">
+              <h3><i data-lucide="help-circle" style="width: 16px; height: 16px;"></i> 為什麼在 K₅ 上允許和局？</h3>
+              <p>因為 $R(3,3)=6 > 5$。在 5 個頂點的完全圖 $K_5$（10 條邊）中，可以將其拆解為兩組互斥的<strong>5-環（5-cycles, $C_5$）</strong>，分別著上紅色與藍色。由於 5-環中不存在長度為 3 的圈（三角形），雙方在著完所有 10 條邊後皆無單色三角形，<strong>從而達到完美和局！</strong>您可在本實驗室切換「K₅」親手驗證此性質。</p>
+            </div>
+
+            <div class="theory-card">
+              <h3><i data-lucide="zap" style="width: 16px; height: 16px;"></i> 什麼是「雙重地雷邊 (Double-Mine)」？</h3>
+              <p>在反向遊戲（Avoidance Game, 誰先形成同色三角形誰輸）中：</p>
+              <ul style="padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.3rem;">
+                <li><strong>單避地雷 (Single Mine)</strong>：若某一未著色邊 $(u,v)$ 與某方現有兩邊構成 2-路徑，該方若著色此邊將立即自毀，對該方為地雷。</li>
+                <li><strong>雙重地雷 [u, v] (Double Mine)</strong>：該未著色邊<strong>同時對紅方與藍方都是自毀邊！</strong>紅方著色則紅輸，藍方著色則藍輸。</li>
+                <li><strong>殘局迫移 (Zugzwang)</strong>：高手會故意製造雙重地雷，將可安全著色的正常邊消耗殆盡，迫使對手在無路可走時不得不踩雷自毀！</li>
+              </ul>
+            </div>
+
+            <div class="theory-card">
+              <h3><i data-lucide="brain-circuit" style="width: 16px; height: 16px;"></i> 反向遊戲與偷策略佯謬</h3>
+              <p>在正向遊戲（如五子棋、Hex）中，「偷策略論證（Strategy Stealing）」保證先手至少可得和局。然而在 Sim / 拉姆齊反向博弈中，<strong>多走一步反而會加速逼近自毀臨界點！</strong>博弈論已透過窮舉搜尋證明：在標準 $K_6$ 的 Sim 遊戲中，<strong>後手（藍方）實際上擁有必勝策略！</strong></p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+
+  </div>
+
+  <!-- End Game Alert Modal -->
+  <div class="game-dialog-overlay" id="gameOverModal">
+    <div class="game-dialog-box">
+      <div class="dialog-icon" id="dialogIcon">
+        <i data-lucide="trophy" style="width: 32px; height: 32px;"></i>
+      </div>
+      <div>
+        <h2 class="dialog-title" id="dialogTitle">對局結束</h2>
+        <p class="dialog-desc" id="dialogDesc" style="margin-top: 0.35rem;">詳細對局戰果說明</p>
+      </div>
+      <div style="background: var(--surface-container-high); padding: 0.6rem 1rem; border-radius: var(--rounded); width: 100%; font-family: var(--font-label); font-size: 0.8rem; border: 1px solid var(--outline-variant);" id="dialogDetailText">
+        致命三角形邊：(1,2), (2,3), (1,3)
+      </div>
+      <div style="display: flex; gap: var(--space-sm); width: 100%;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="closeGameOverModal(); confirmResetGame();">
+          <i data-lucide="play" style="width: 14px; height: 14px;"></i> 再玩一局
+        </button>
+        <button class="btn" style="flex: 1;" onclick="closeGameOverModal();">
+          <i data-lucide="eye" style="width: 14px; height: 14px;"></i> 檢視終局拓撲
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- API Shim (Mandatory for Gemini Notebook Persistence) -->
+  <api-shim></api-shim>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    /* =========================================================================
+       RAMSEY GAME INTERACTIVE TOPOLOGY LAB - CORE ENGINE
+       Self-contained, mathematically verified implementation of Sim & Ramsey K_n
+       ========================================================================= */
+
+    // Constants
+    const COLOR_RED = 'R';
+    const COLOR_BLUE = 'B';
+    const COLOR_UNCOLORED = 'U';
+
+    // Game State
+    let nVertices = 6;              // Default K6
+    let labelFormat = '1-based';     // '1-based' (1..n), '0-based' (0..n-1), 'alpha' (A..F)
+    let gameMode = '2p';            // '2p', 'vs-ai', 'ai-vs-ai'
+    let aiLevel = 'master';         // 'novice', 'tactician', 'master'
+    let humanColor = COLOR_RED;     // Human plays Red by default
+    let firstPlayer = COLOR_RED;    // First player is Red
+    let currentPlayer = COLOR_RED;  // Current turn
+    let soundEnabled = true;
+    let safetyPreviewEnabled = true;
+
+    // Graph Data Structures
+    let nodes = [];                 // Array of { id: 0..n-1, x, y, vx, vy }
+    let edges = [];                 // Array of { id, u, v, color: 'U'|'R'|'B', isDoubleMine: bool, isRedMine: bool, isBlueMine: bool }
+    let movesHistory = [];          // Array of history snapshots
+    let historyIndex = -1;          // Current pointer in history
+    let gameOver = false;
+    let winner = null;              // 'R', 'B', or 'DRAW'
+    let loser = null;               // 'R' or 'B'
+    let fatalTriangle = null;       // Array of 3 node IDs [u, v, w] that caused loss
+
+    // Dragging & Interaction State
+    let isDraggingNode = false;
+    let draggedNodeId = null;
+    let dragOffset = { x: 0, y: 0 };
+    let isConnectingFromNode = false;
+    let connectingSourceNodeId = null;
+    let hoveredEdgeId = null;
+
+    // Web Audio Synthesizer
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSoundTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // Audio policy or unsupported fallback
+      }
+    }
+
+    function playSoundMove(playerColor) {
+      if (playerColor === COLOR_RED) {
+        playSoundTone(523.25, 'triangle', 0.16, 0.12); // C5
+      } else {
+        playSoundTone(659.25, 'triangle', 0.16, 0.12); // E5
+      }
+    }
+
+    function playSoundDoubleMineAlert() {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        // Two tone alert chord
+        playSoundTone(440, 'sawtooth', 0.25, 0.08);
+        setTimeout(() => playSoundTone(880, 'sawtooth', 0.3, 0.1), 80);
+      } catch (e) {}
+    }
+
+    function playSoundVictory(isDraw) {
+      if (!soundEnabled) return;
+      if (isDraw) {
+        playSoundTone(440, 'sine', 0.3, 0.1);
+        setTimeout(() => playSoundTone(554.37, 'sine', 0.4, 0.1), 180);
+      } else {
+        playSoundTone(587.33, 'triangle', 0.18, 0.15);
+        setTimeout(() => playSoundTone(739.99, 'triangle', 0.22, 0.15), 150);
+        setTimeout(() => playSoundTone(880, 'triangle', 0.45, 0.18), 300);
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       GRAPH GEOMETRY & TOPOLOGY LAYOUT
+       ------------------------------------------------------------------------- */
+    function initializeGraphTopology(numVertices) {
+      nVertices = numVertices;
+      nodes = [];
+      edges = [];
+      const centerX = 400;
+      const centerY = 295;
+      const radius = 205;
+
+      // Regular polygon layout
+      for (let i = 0; i < nVertices; i++) {
+        const angle = -Math.PI / 2 + (2 * Math.PI * i) / nVertices;
+        nodes.push({
+          id: i,
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle)
+        });
+      }
+
+      // Generate all pairs for complete graph Kn
+      let edgeId = 0;
+      for (let i = 0; i < nVertices; i++) {
+        for (let j = i + 1; j < nVertices; j++) {
+          edges.push({
+            id: edgeId++,
+            u: i,
+            v: j,
+            color: COLOR_UNCOLORED,
+            isDoubleMine: false,
+            isRedMine: false,
+            isBlueMine: false
+          });
+        }
+      }
+    }
+
+    function applyPresetLayout(type) {
+      if (!nodes || nodes.length !== nVertices) {
+        initializeGraphTopology(nVertices);
+      }
+      const centerX = 400;
+      const centerY = 295;
+
+      if (type === 'circle' || type === 'reset') {
+        const radius = 205;
+        for (let i = 0; i < nVertices; i++) {
+          if (!nodes[i]) nodes[i] = { id: i, x: centerX, y: centerY };
+          const angle = -Math.PI / 2 + (2 * Math.PI * i) / nVertices;
+          nodes[i].x = centerX + radius * Math.cos(angle);
+          nodes[i].y = centerY + radius * Math.sin(angle);
+        }
+      } else if (type === 'dual-ring') {
+        const outerCount = Math.ceil(nVertices / 2);
+        const innerCount = nVertices - outerCount;
+        const rOuter = 215;
+        const rInner = 110;
+
+        for (let i = 0; i < outerCount; i++) {
+          if (!nodes[i]) nodes[i] = { id: i, x: centerX, y: centerY };
+          const angle = -Math.PI / 2 + (2 * Math.PI * i) / outerCount;
+          nodes[i].x = centerX + rOuter * Math.cos(angle);
+          nodes[i].y = centerY + rOuter * Math.sin(angle);
+        }
+        for (let i = 0; i < innerCount; i++) {
+          const idx = outerCount + i;
+          if (!nodes[idx]) nodes[idx] = { id: idx, x: centerX, y: centerY };
+          const angle = (2 * Math.PI * i) / innerCount;
+          nodes[idx].x = centerX + rInner * Math.cos(angle);
+          nodes[idx].y = centerY + rInner * Math.sin(angle);
+        }
+      } else if (type === 'organic') {
+        // Organic perturbed configuration
+        const baseRadius = 200;
+        for (let i = 0; i < nVertices; i++) {
+          if (!nodes[i]) nodes[i] = { id: i, x: centerX, y: centerY };
+          const angle = -Math.PI / 2 + (2 * Math.PI * i) / nVertices;
+          const jitterR = baseRadius + (Math.sin(i * 3.7) * 45) + (Math.cos(i * 2.1) * 20);
+          const jitterA = angle + (Math.cos(i * 1.9) * 0.22);
+          nodes[i].x = Math.max(80, Math.min(720, centerX + jitterR * Math.cos(jitterA)));
+          nodes[i].y = Math.max(80, Math.min(520, centerY + jitterR * Math.sin(jitterA)));
+        }
+      }
+
+      updateSvgPositions();
+      showToast('拓撲幾何已重置為 ' + (type === 'circle' ? '正多邊形' : type === 'dual-ring' ? '雙環排列' : '有機分佈'));
+    }
+
+    /* -------------------------------------------------------------------------
+       LABEL FORMATTING (1-based, 0-based, Alpha)
+       ------------------------------------------------------------------------- */
+    function formatNode(id) {
+      if (labelFormat === '1-based') {
+        return (id + 1).toString();
+      } else if (labelFormat === '0-based') {
+        return id.toString();
+      } else {
+        return String.fromCharCode(65 + id); // 'A', 'B', 'C'...
+      }
+    }
+
+    function formatEdgeNotation(u, v, colorCode) {
+      const minNode = Math.min(u, v);
+      const maxNode = Math.max(u, v);
+      return `(${formatNode(minNode)},${formatNode(maxNode)})${colorCode}`;
+    }
+
+    function formatDoubleMineTag(u, v) {
+      const minNode = Math.min(u, v);
+      const maxNode = Math.max(u, v);
+      return `[${formatNode(minNode)},${formatNode(maxNode)}]`;
+    }
+
+    /* -------------------------------------------------------------------------
+       MATHEMATICAL SIM LOGIC & DOUBLE-MINE DETECTION
+       ------------------------------------------------------------------------- */
+    function getEdge(u, v, edgeList = edges) {
+      const minNode = Math.min(u, v);
+      const maxNode = Math.max(u, v);
+      return edgeList.find(e => (e.u === minNode && e.v === maxNode) || (e.u === maxNode && e.v === minNode));
+    }
+
+    // Check if coloring edge (u, v) with color 'targetColor' forms a monochromatic triangle
+    function formsMonochromaticTriangle(u, v, targetColor, edgeList = edges) {
+      for (let w = 0; w < nVertices; w++) {
+        if (w === u || w === v) continue;
+        const e1 = getEdge(u, w, edgeList);
+        const e2 = getEdge(v, w, edgeList);
+        if (e1 && e2 && e1.color === targetColor && e2.color === targetColor) {
+          return [u, v, w]; // Returns the 3 vertices of the fatal triangle
+        }
+      }
+      return null;
+    }
+
+    // Detect all current Red Mines, Blue Mines, and Double-Mines
+    function analyzeMines(edgeList = edges) {
+      let redMines = 0;
+      let blueMines = 0;
+      let doubleMines = 0;
+      let safeEdges = 0;
+      let uncoloredCount = 0;
+      const activeDoubleMinePairs = [];
+
+      edgeList.forEach(e => {
+        if (e.color === COLOR_UNCOLORED) {
+          uncoloredCount++;
+          const redHazard = !!formsMonochromaticTriangle(e.u, e.v, COLOR_RED, edgeList);
+          const blueHazard = !!formsMonochromaticTriangle(e.u, e.v, COLOR_BLUE, edgeList);
+
+          e.isRedMine = redHazard;
+          e.isBlueMine = blueHazard;
+          e.isDoubleMine = redHazard && blueHazard;
+
+          if (e.isDoubleMine) {
+            doubleMines++;
+            activeDoubleMinePairs.push({ u: e.u, v: e.v, edgeId: e.id });
+          } else if (redHazard) {
+            redMines++;
+          } else if (blueHazard) {
+            blueMines++;
+          } else {
+            safeEdges++;
+          }
+        } else {
+          e.isRedMine = false;
+          e.isBlueMine = false;
+          e.isDoubleMine = false;
+        }
+      });
+
+      return {
+        uncoloredCount,
+        redMines,
+        blueMines,
+        doubleMines,
+        safeEdges,
+        activeDoubleMinePairs
+      };
+    }
+
+    /* -------------------------------------------------------------------------
+       SVG RENDERING AND SYNCHRONIZATION
+       ------------------------------------------------------------------------- */
+    function renderSvgElements() {
+      const edgesLayer = document.getElementById('edgesLayer');
+      const mineBadgesLayer = document.getElementById('mineBadgesLayer');
+      const nodesLayer = document.getElementById('nodesLayer');
+
+      edgesLayer.innerHTML = '';
+      mineBadgesLayer.innerHTML = '';
+      nodesLayer.innerHTML = '';
+
+      // 1. Render Edges (Hit area + Visual line)
+      edges.forEach(e => {
+        const uNode = nodes[e.u];
+        const vNode = nodes[e.v];
+
+        // Visual Edge
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('id', `edge-visual-${e.id}`);
+        line.setAttribute('class', 'edge-visual edge-uncolored');
+        line.setAttribute('x1', uNode.x);
+        line.setAttribute('y1', uNode.y);
+        line.setAttribute('x2', vNode.x);
+        line.setAttribute('y2', vNode.y);
+
+        // Interactive Hit Area Line (Wider stroke for easy clicking/tapping)
+        const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        hitArea.setAttribute('id', `edge-hit-${e.id}`);
+        hitArea.setAttribute('class', 'edge-hit-area');
+        hitArea.setAttribute('x1', uNode.x);
+        hitArea.setAttribute('y1', uNode.y);
+        hitArea.setAttribute('x2', vNode.x);
+        hitArea.setAttribute('y2', vNode.y);
+
+        hitArea.addEventListener('pointerenter', (evt) => handleEdgeHover(e.id, evt));
+        hitArea.addEventListener('pointerleave', () => handleEdgeLeave(e.id));
+        hitArea.addEventListener('pointerdown', (evt) => {
+          evt.stopPropagation();
+          handleEdgeClick(e.id);
+        });
+
+        edgesLayer.appendChild(line);
+        edgesLayer.appendChild(hitArea);
+
+        // Double-mine badge (initially hidden)
+        const badgeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        badgeGroup.setAttribute('id', `mine-badge-${e.id}`);
+        badgeGroup.setAttribute('class', 'mine-badge-group');
+        badgeGroup.style.display = 'none';
+
+        const badgeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        badgeRect.setAttribute('class', 'mine-badge-bg');
+        badgeRect.setAttribute('rx', '4');
+        badgeRect.setAttribute('ry', '4');
+        badgeRect.setAttribute('width', '48');
+        badgeRect.setAttribute('height', '18');
+
+        const badgeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        badgeText.setAttribute('class', 'mine-badge-text');
+        badgeText.textContent = formatDoubleMineTag(e.u, e.v);
+
+        badgeGroup.appendChild(badgeRect);
+        badgeGroup.appendChild(badgeText);
+        badgeGroup.addEventListener('pointerdown', (evt) => {
+          evt.stopPropagation();
+          highlightEdge(e.id);
+        });
+
+        mineBadgesLayer.appendChild(badgeGroup);
+      });
+
+      // 2. Render Nodes (Vertices)
+      nodes.forEach(node => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('id', `node-group-${node.id}`);
+        g.setAttribute('class', 'graph-node-group');
+        g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+
+        // Outer Halo for hover/selection
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        halo.setAttribute('class', 'node-outer-halo');
+        halo.setAttribute('r', '22');
+
+        // Central Circle
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('class', 'node-circle');
+        circle.setAttribute('id', `node-circle-${node.id}`);
+        circle.setAttribute('r', '17');
+
+        // Label
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('class', 'node-text');
+        text.setAttribute('id', `node-text-${node.id}`);
+        text.textContent = formatNode(node.id);
+
+        g.appendChild(halo);
+        g.appendChild(circle);
+        g.appendChild(text);
+
+        // Pointer Drag & Click Events
+        g.addEventListener('pointerdown', (evt) => handleNodePointerDown(node.id, evt));
+
+        nodesLayer.appendChild(g);
+      });
+
+      updateSvgStyles();
+    }
+
+    function updateSvgPositions() {
+      // Update edge lines
+      edges.forEach(e => {
+        const u = nodes[e.u];
+        const v = nodes[e.v];
+        const visual = document.getElementById(`edge-visual-${e.id}`);
+        const hit = document.getElementById(`edge-hit-${e.id}`);
+        if (visual) {
+          visual.setAttribute('x1', u.x);
+          visual.setAttribute('y1', u.y);
+          visual.setAttribute('x2', v.x);
+          visual.setAttribute('y2', v.y);
+        }
+        if (hit) {
+          hit.setAttribute('x1', u.x);
+          hit.setAttribute('y1', u.y);
+          hit.setAttribute('x2', v.x);
+          hit.setAttribute('y2', v.y);
+        }
+
+        // Update badge position (midpoint)
+        const badge = document.getElementById(`mine-badge-${e.id}`);
+        if (badge) {
+          const midX = (u.x + v.x) / 2;
+          const midY = (u.y + v.y) / 2;
+          const rect = badge.querySelector('rect');
+          const text = badge.querySelector('text');
+          if (rect && text) {
+            rect.setAttribute('x', midX - 24);
+            rect.setAttribute('y', midY - 9);
+            text.setAttribute('x', midX);
+            text.setAttribute('y', midY);
+          }
+        }
+      });
+
+      // Update nodes
+      nodes.forEach(node => {
+        const g = document.getElementById(`node-group-${node.id}`);
+        if (g) {
+          g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+        }
+      });
+
+      // Update fatal triangle if active
+      if (fatalTriangle && fatalTriangle.length === 3) {
+        const poly = document.getElementById('fatalTrianglePolygon');
+        if (poly) {
+          const p0 = nodes[fatalTriangle[0]];
+          const p1 = nodes[fatalTriangle[1]];
+          const p2 = nodes[fatalTriangle[2]];
+          poly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
+        }
+      }
+    }
+
+    function updateSvgStyles() {
+      // Refresh edge classes based on colors & double mines
+      edges.forEach(e => {
+        const visual = document.getElementById(`edge-visual-${e.id}`);
+        const badge = document.getElementById(`mine-badge-${e.id}`);
+        if (!visual) return;
+
+        visual.classList.remove('edge-uncolored', 'edge-red', 'edge-blue', 'edge-double-mine');
+
+        if (e.color === COLOR_RED) {
+          visual.classList.add('edge-red');
+          if (badge) badge.style.display = 'none';
+        } else if (e.color === COLOR_BLUE) {
+          visual.classList.add('edge-blue');
+          if (badge) badge.style.display = 'none';
+        } else {
+          // Uncolored edge
+          if (e.isDoubleMine) {
+            visual.classList.add('edge-double-mine');
+            if (badge) {
+              badge.style.display = 'block';
+              badge.querySelector('text').textContent = formatDoubleMineTag(e.u, e.v);
+            }
+          } else {
+            visual.classList.add('edge-uncolored');
+            if (badge) badge.style.display = 'none';
+          }
+        }
+      });
+
+      // Fatal triangle display
+      const poly = document.getElementById('fatalTrianglePolygon');
+      if (poly) {
+        if (gameOver && fatalTriangle) {
+          const p0 = nodes[fatalTriangle[0]];
+          const p1 = nodes[fatalTriangle[1]];
+          const p2 = nodes[fatalTriangle[2]];
+          poly.setAttribute('points', `${p0.x},${p0.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
+          poly.classList.remove('fatal-red', 'fatal-blue');
+          poly.classList.add(loser === COLOR_RED ? 'fatal-red' : 'fatal-blue');
+          poly.style.display = 'block';
+        } else {
+          poly.style.display = 'none';
+        }
+      }
+
+      // Refresh node labels if labelFormat changed
+      nodes.forEach(node => {
+        const text = document.getElementById(`node-text-${node.id}`);
+        if (text) {
+          text.textContent = formatNode(node.id);
+        }
+      });
+    }
+
+    /* -------------------------------------------------------------------------
+       POINTER DRAG AND NODE INTERACTION
+       ------------------------------------------------------------------------- */
+    const svgElement = document.getElementById('topologySvg');
+
+    function getSvgCoordinates(evt) {
+      const pt = svgElement.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      const cursorPt = pt.matrixTransform(svgElement.getScreenCTM().inverse());
+      return { x: cursorPt.x, y: cursorPt.y };
+    }
+
+    function handleNodePointerDown(nodeId, evt) {
+      if (evt.button !== 0) return; // Only primary mouse button or touch
+      evt.stopPropagation();
+      evt.preventDefault();
+
+      const coords = getSvgCoordinates(evt);
+
+      // If user had previously selected a node to draw an edge to this node:
+      if (isConnectingFromNode && connectingSourceNodeId !== null && connectingSourceNodeId !== nodeId) {
+        const targetEdge = getEdge(connectingSourceNodeId, nodeId);
+        if (targetEdge && targetEdge.color === COLOR_UNCOLORED && !gameOver) {
+          executeMove(targetEdge.id);
+        }
+        resetNodeSelection();
+        return;
+      }
+
+      // Start drag or node-to-node drawing
+      isDraggingNode = true;
+      draggedNodeId = nodeId;
+      dragOffset.x = coords.x - nodes[nodeId].x;
+      dragOffset.y = coords.y - nodes[nodeId].y;
+
+      svgElement.setPointerCapture(evt.pointerId);
+
+      // Visual feedback
+      const circle = document.getElementById(`node-circle-${nodeId}`);
+      if (circle) circle.classList.add('node-selected');
+    }
+
+    svgElement.addEventListener('pointermove', (evt) => {
+      const coords = getSvgCoordinates(evt);
+
+      // 1. Move dragging node
+      if (isDraggingNode && draggedNodeId !== null) {
+        // Constrain to SVG boundaries
+        const newX = Math.max(25, Math.min(775, coords.x - dragOffset.x));
+        const newY = Math.max(25, Math.min(575, coords.y - dragOffset.y));
+        nodes[draggedNodeId].x = newX;
+        nodes[draggedNodeId].y = newY;
+        updateSvgPositions();
+      }
+
+      // 2. Node-to-node line drawing preview
+      if (isConnectingFromNode && connectingSourceNodeId !== null) {
+        const previewLine = document.getElementById('drawPreviewLine');
+        const src = nodes[connectingSourceNodeId];
+        previewLine.setAttribute('x1', src.x);
+        previewLine.setAttribute('y1', src.y);
+        previewLine.setAttribute('x2', coords.x);
+        previewLine.setAttribute('y2', coords.y);
+        previewLine.style.display = 'block';
+      }
+
+      // 3. Move Tooltip if visible
+      const tooltip = document.getElementById('hoverTooltip');
+      if (tooltip && tooltip.style.display === 'block') {
+        const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+        tooltip.style.left = `${evt.clientX - rect.left}px`;
+        tooltip.style.top = `${evt.clientY - rect.top}px`;
+      }
+    });
+
+    svgElement.addEventListener('pointerup', (evt) => {
+      if (isDraggingNode && draggedNodeId !== null) {
+        const circle = document.getElementById(`node-circle-${draggedNodeId}`);
+        if (circle) circle.classList.remove('node-selected');
+      }
+
+      isDraggingNode = false;
+      draggedNodeId = null;
+
+      try {
+        svgElement.releasePointerCapture(evt.pointerId);
+      } catch (e) {}
+    });
+
+    function resetNodeSelection() {
+      isConnectingFromNode = false;
+      connectingSourceNodeId = null;
+      const previewLine = document.getElementById('drawPreviewLine');
+      if (previewLine) previewLine.style.display = 'none';
+      nodes.forEach(n => {
+        const c = document.getElementById(`node-circle-${n.id}`);
+        if (c) c.classList.remove('node-selected');
+      });
+    }
+
+    /* -------------------------------------------------------------------------
+       EDGE HOVER & SAFETY PREVIEW INSPECTOR
+       ------------------------------------------------------------------------- */
+    function handleEdgeHover(edgeId, evt) {
+      if (gameOver) return;
+      const edge = edges.find(e => e.id === edgeId);
+      if (!edge || edge.color !== COLOR_UNCOLORED) return;
+
+      hoveredEdgeId = edgeId;
+      const visual = document.getElementById(`edge-visual-${edgeId}`);
+      if (visual && !edge.isDoubleMine) {
+        visual.classList.add('edge-hovered');
+      }
+
+      if (safetyPreviewEnabled) {
+        const tooltip = document.getElementById('hoverTooltip');
+        const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+        const notation = formatEdgeNotation(edge.u, edge.v, currentPlayer);
+
+        let statusHtml = '';
+        if (edge.isDoubleMine) {
+          statusHtml = `<span style="color: var(--mine-double); font-weight: 700;">☠️ 雙重地雷 [${formatNode(edge.u)},${formatNode(edge.v)}]：紅藍雙方著色皆自毀！</span>`;
+        } else if (currentPlayer === COLOR_RED && edge.isRedMine) {
+          statusHtml = `<span style="color: var(--player-red); font-weight: 700;">⚠️ 紅方禁手地雷：著色將立即完成紅色三角形落敗！</span>`;
+        } else if (currentPlayer === COLOR_BLUE && edge.isBlueMine) {
+          statusHtml = `<span style="color: var(--player-blue); font-weight: 700;">⚠️ 藍方禁手地雷：著色將立即完成藍色三角形落敗！</span>`;
+        } else {
+          statusHtml = `<span style="color: var(--tertiary);">✓ 安全邊：點擊著色 ${notation}</span>`;
+        }
+
+        tooltip.innerHTML = statusHtml;
+        tooltip.style.left = `${evt.clientX - rect.left}px`;
+        tooltip.style.top = `${evt.clientY - rect.top}px`;
+        tooltip.style.display = 'block';
+      }
+    }
+
+    function handleEdgeLeave(edgeId) {
+      hoveredEdgeId = null;
+      const edge = edges.find(e => e.id === edgeId);
+      const visual = document.getElementById(`edge-visual-${edgeId}`);
+      if (visual && edge && edge.color === COLOR_UNCOLORED && !edge.isDoubleMine) {
+        visual.classList.remove('edge-hovered');
+      }
+      const tooltip = document.getElementById('hoverTooltip');
+      if (tooltip) tooltip.style.display = 'none';
+    }
+
+    function highlightEdge(edgeId) {
+      const visual = document.getElementById(`edge-visual-${edgeId}`);
+      if (visual) {
+        visual.style.strokeWidth = '8px';
+        setTimeout(() => {
+          visual.style.strokeWidth = '';
+        }, 800);
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       GAME MOVE EXECUTION & DOUBLE-MINE TAGGING
+       ------------------------------------------------------------------------- */
+    function handleEdgeClick(edgeId) {
+      if (gameOver) return;
+
+      // In vs-ai mode, prevent clicks when it's AI turn
+      if (gameMode === 'vs-ai' && currentPlayer !== humanColor) return;
+      // In ai-vs-ai mode, humans don't click
+      if (gameMode === 'ai-vs-ai') return;
+
+      const edge = edges.find(e => e.id === edgeId);
+      if (!edge || edge.color !== COLOR_UNCOLORED) return;
+
+      executeMove(edgeId);
+    }
+
+    function executeMove(edgeId) {
+      const edge = edges.find(e => e.id === edgeId);
+      if (!edge || edge.color !== COLOR_UNCOLORED || gameOver) return;
+
+      // 1. Snapshot previous double-mines before this move
+      const prevMines = analyzeMines(edges);
+      const prevDoubleMineKeys = new Set(prevMines.activeDoubleMinePairs.map(p => `${Math.min(p.u, p.v)}-${Math.max(p.u, p.v)}`));
+
+      // 2. Color the edge with currentPlayer's color
+      edge.color = currentPlayer;
+      playSoundMove(currentPlayer);
+
+      // 3. Check if this move completes a fatal monochromatic triangle (loss condition!)
+      const fatalTri = formsMonochromaticTriangle(edge.u, edge.v, currentPlayer, edges);
+
+      // 4. Analyze mines AFTER this move to detect newly spawned double-mines
+      const postMines = analyzeMines(edges);
+      const newDoubleMines = [];
+      postMines.activeDoubleMinePairs.forEach(p => {
+        const key = `${Math.min(p.u, p.v)}-${Math.max(p.u, p.v)}`;
+        if (!prevDoubleMineKeys.has(key)) {
+          newDoubleMines.push({ u: p.u, v: p.v });
+        }
+      });
+
+      // If new double-mines appeared, alert user
+      if (newDoubleMines.length > 0) {
+        playSoundDoubleMineAlert();
+        const tagsStr = newDoubleMines.map(m => formatDoubleMineTag(m.u, m.v)).join(' ');
+        showToast(`⚡ 產生新雙重地雷邊：${tagsStr}！雙方皆不可碰觸！`);
+      }
+
+      // 5. Record move in history log
+      const moveRecord = {
+        stepNumber: movesHistory.length + 1,
+        player: currentPlayer,
+        edgeId: edge.id,
+        u: edge.u,
+        v: edge.v,
+        colorCode: currentPlayer,
+        notation: formatEdgeNotation(edge.u, edge.v, currentPlayer),
+        newDoubleMines: newDoubleMines.map(m => ({ u: m.u, v: m.v })),
+        doubleMineTagStr: newDoubleMines.map(m => formatDoubleMineTag(m.u, m.v)).join(' '),
+        wasSuicide: !!fatalTri,
+        activeDoubleMinesAtStep: postMines.activeDoubleMinePairs.map(p => formatDoubleMineTag(p.u, p.v)),
+        // Clone edges state for perfect undo/redo
+        edgesSnapshot: edges.map(e => ({ ...e }))
+      };
+
+      // Discard future history if we were in undo state
+      if (historyIndex < movesHistory.length - 1) {
+        movesHistory = movesHistory.slice(0, historyIndex + 1);
+      }
+      movesHistory.push(moveRecord);
+      historyIndex = movesHistory.length - 1;
+
+      // 6. Handle End of Game
+      if (fatalTri) {
+        gameOver = true;
+        loser = currentPlayer;
+        winner = (loser === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+        fatalTriangle = fatalTri;
+        playSoundVictory(false);
+        showGameOverDialog(winner, loser, fatalTriangle);
+      } else if (postMines.uncoloredCount === 0) {
+        // All edges colored without fatal triangle! Draw! (Possible in K5)
+        gameOver = true;
+        winner = 'DRAW';
+        loser = null;
+        fatalTriangle = null;
+        playSoundVictory(true);
+        showGameOverDialog('DRAW', null, null);
+      } else {
+        // Toggle turn
+        currentPlayer = (currentPlayer === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+      }
+
+      // 7. Update UI Views
+      updateSvgStyles();
+      updateDashboardUI();
+      persistState();
+
+      // 8. Trigger AI move if applicable
+      if (!gameOver) {
+        triggerAiTurnIfNeeded();
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       UNDO / REDO STACK
+       ------------------------------------------------------------------------- */
+    function handleUndo() {
+      if (historyIndex < 0) return;
+
+      historyIndex--;
+      if (historyIndex >= 0) {
+        const targetState = movesHistory[historyIndex];
+        // Restore edges
+        edges = targetState.edgesSnapshot.map(e => ({ ...e }));
+        // Next player is opposite of last player moved
+        currentPlayer = (targetState.player === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+      } else {
+        // Back to move 0
+        edges.forEach(e => {
+          e.color = COLOR_UNCOLORED;
+          e.isDoubleMine = false;
+          e.isRedMine = false;
+          e.isBlueMine = false;
+        });
+        currentPlayer = firstPlayer;
+      }
+
+      gameOver = false;
+      winner = null;
+      loser = null;
+      fatalTriangle = null;
+
+      analyzeMines(edges);
+      updateSvgStyles();
+      updateDashboardUI();
+      showToast('已撤回一步');
+      persistState();
+    }
+
+    function handleRedo() {
+      if (historyIndex >= movesHistory.length - 1) return;
+
+      historyIndex++;
+      const targetState = movesHistory[historyIndex];
+      edges = targetState.edgesSnapshot.map(e => ({ ...e }));
+
+      if (targetState.wasSuicide) {
+        gameOver = true;
+        loser = targetState.player;
+        winner = (loser === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+        fatalTriangle = formsMonochromaticTriangle(targetState.u, targetState.v, targetState.player, edges);
+      } else if (historyIndex === edges.length - 1) {
+        gameOver = true;
+        winner = 'DRAW';
+      } else {
+        currentPlayer = (targetState.player === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+      }
+
+      analyzeMines(edges);
+      updateSvgStyles();
+      updateDashboardUI();
+      showToast('已重做一步');
+      persistState();
+    }
+
+    function jumpToHistoryStep(stepIdx) {
+      if (stepIdx < -1 || stepIdx >= movesHistory.length) return;
+      historyIndex = stepIdx;
+
+      if (historyIndex >= 0) {
+        const targetState = movesHistory[historyIndex];
+        edges = targetState.edgesSnapshot.map(e => ({ ...e }));
+        if (targetState.wasSuicide) {
+          gameOver = true;
+          loser = targetState.player;
+          winner = (loser === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+          fatalTriangle = formsMonochromaticTriangle(targetState.u, targetState.v, targetState.player, edges);
+        } else {
+          gameOver = false;
+          winner = null;
+          loser = null;
+          fatalTriangle = null;
+          currentPlayer = (targetState.player === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+        }
+      } else {
+        edges.forEach(e => {
+          e.color = COLOR_UNCOLORED;
+          e.isDoubleMine = false;
+          e.isRedMine = false;
+          e.isBlueMine = false;
+        });
+        gameOver = false;
+        currentPlayer = firstPlayer;
+        fatalTriangle = null;
+      }
+
+      analyzeMines(edges);
+      updateSvgStyles();
+      updateDashboardUI();
+      persistState();
+    }
+
+    function confirmResetGame() {
+      edges.forEach(e => {
+        e.color = COLOR_UNCOLORED;
+        e.isDoubleMine = false;
+        e.isRedMine = false;
+        e.isBlueMine = false;
+      });
+      movesHistory = [];
+      historyIndex = -1;
+      gameOver = false;
+      winner = null;
+      loser = null;
+      fatalTriangle = null;
+      currentPlayer = firstPlayer;
+
+      analyzeMines(edges);
+      updateSvgStyles();
+      updateDashboardUI();
+      resetNodeSelection();
+      showToast('棋盤已重新開始');
+      persistState();
+
+      if (gameMode === 'vs-ai' && currentPlayer !== humanColor) {
+        triggerAiTurnIfNeeded();
+      } else if (gameMode === 'ai-vs-ai') {
+        triggerAiTurnIfNeeded();
+      }
+    }
+
+    /* -------------------------------------------------------------------------
+       AI DECISION ENGINE (Novice, Tactician, Master)
+       ------------------------------------------------------------------------- */
+    function triggerAiTurnIfNeeded() {
+      if (gameOver) return;
+
+      const shouldAiMove = (gameMode === 'ai-vs-ai') ||
+                           (gameMode === 'vs-ai' && currentPlayer !== humanColor);
+
+      if (!shouldAiMove) return;
+
+      // Small delay for natural UI feel
+      const aiDelay = (gameMode === 'ai-vs-ai') ? 850 : 450;
+      updateTurnIndicator(true);
+
+      setTimeout(() => {
+        if (gameOver) return;
+        const chosenEdgeId = computeBestAiMove(currentPlayer, aiLevel);
+        if (chosenEdgeId !== null) {
+          executeMove(chosenEdgeId);
+        }
+      }, aiDelay);
+    }
+
+    function computeBestAiMove(aiColor, level) {
+      const uncoloredEdges = edges.filter(e => e.color === COLOR_UNCOLORED);
+      if (uncoloredEdges.length === 0) return null;
+
+      const oppColor = (aiColor === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+
+      // 1. Separate safe edges from suicidal edges for AI
+      const safeEdges = [];
+      const suicideEdges = [];
+
+      uncoloredEdges.forEach(e => {
+        if (formsMonochromaticTriangle(e.u, e.v, aiColor, edges)) {
+          suicideEdges.push(e);
+        } else {
+          safeEdges.push(e);
+        }
+      });
+
+      // If AI has NO safe moves, it must commit suicide (forced loss)
+      if (safeEdges.length === 0) {
+        return uncoloredEdges[Math.floor(Math.random() * uncoloredEdges.length)].id;
+      }
+
+      // If only 1 safe edge exists, take it
+      if (safeEdges.length === 1) {
+        return safeEdges[0].id;
+      }
+
+      // NOVICE LEVEL: Random safe move
+      if (level === 'novice') {
+        return safeEdges[Math.floor(Math.random() * safeEdges.length)].id;
+      }
+
+      // TACTICIAN LEVEL: Heuristic degree balancing + threat control
+      if (level === 'tactician') {
+        let bestEdge = safeEdges[0];
+        let bestScore = -999999;
+
+        safeEdges.forEach(e => {
+          let score = 0;
+
+          // 1. Avoid creating Double-mines that help opponent, or create double mines that trap opponent
+          // Simulate move:
+          e.color = aiColor;
+          const oppSafeMoves = edges.filter(oe => oe.color === COLOR_UNCOLORED && !formsMonochromaticTriangle(oe.u, oe.v, oppColor, edges));
+          const aiNextSafeMoves = edges.filter(ae => ae.color === COLOR_UNCOLORED && !formsMonochromaticTriangle(ae.u, ae.v, aiColor, edges));
+
+          // Heuristic: Maximize AI remaining safe moves, minimize Opponent remaining safe moves
+          score = (aiNextSafeMoves.length * 20) - (oppSafeMoves.length * 25);
+
+          // Degree balancing penalty: avoid making a node have 3 incident edges of AI color
+          let uDeg = 0, vDeg = 0;
+          edges.forEach(edgeObj => {
+            if (edgeObj.color === aiColor) {
+              if (edgeObj.u === e.u || edgeObj.v === e.u) uDeg++;
+              if (edgeObj.u === e.v || edgeObj.v === e.v) vDeg++;
+            }
+          });
+          if (uDeg >= 2) score -= 30;
+          if (vDeg >= 2) score -= 30;
+
+          e.color = COLOR_UNCOLORED; // Backtrack
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestEdge = e;
+          }
+        });
+
+        return bestEdge.id;
+      }
+
+      // MASTER LEVEL: Minimax + Alpha-Beta Lookahead with Double-Mine Zugzwang
+      if (level === 'master') {
+        const remaining = uncoloredEdges.length;
+        // Search depth adjusted by remaining branching factor
+        let searchDepth = remaining <= 8 ? 6 : (remaining <= 11 ? 4 : 3);
+
+        let bestVal = -Infinity;
+        let chosenEdge = safeEdges[0];
+
+        // Evaluate candidate safe moves with alpha-beta
+        for (let i = 0; i < safeEdges.length; i++) {
+          const e = safeEdges[i];
+          e.color = aiColor;
+
+          const val = minimaxAlphaBeta(searchDepth - 1, false, -Infinity, Infinity, aiColor, oppColor);
+          e.color = COLOR_UNCOLORED; // Backtrack
+
+          if (val > bestVal) {
+            bestVal = val;
+            chosenEdge = e;
+          }
+        }
+
+        return chosenEdge.id;
+      }
+
+      return safeEdges[0].id;
+    }
+
+    // Minimax with Alpha-Beta
+    function minimaxAlphaBeta(depth, isMaximizing, alpha, beta, aiColor, oppColor) {
+      const activeColor = isMaximizing ? aiColor : oppColor;
+      const otherColor = isMaximizing ? oppColor : aiColor;
+
+      const uncolored = edges.filter(e => e.color === COLOR_UNCOLORED);
+      if (uncolored.length === 0) return 0; // Draw
+
+      // Filter safe moves for current player in tree
+      const safeMoves = [];
+      for (let i = 0; i < uncolored.length; i++) {
+        const e = uncolored[i];
+        if (!formsMonochromaticTriangle(e.u, e.v, activeColor, edges)) {
+          safeMoves.push(e);
+        }
+      }
+
+      // If active player has NO safe moves, they lose!
+      if (safeMoves.length === 0) {
+        return isMaximizing ? -10000 - depth : 10000 + depth;
+      }
+
+      // Depth cutoff reached: evaluate state heuristic
+      if (depth === 0) {
+        return evaluateBoardPosition(aiColor, oppColor);
+      }
+
+      if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (let i = 0; i < safeMoves.length; i++) {
+          const e = safeMoves[i];
+          e.color = activeColor;
+          const evaluation = minimaxAlphaBeta(depth - 1, false, alpha, beta, aiColor, oppColor);
+          e.color = COLOR_UNCOLORED;
+          maxEval = Math.max(maxEval, evaluation);
+          alpha = Math.max(alpha, evaluation);
+          if (beta <= alpha) break; // Beta cut-off
+        }
+        return maxEval;
+      } else {
+        let minEval = Infinity;
+        for (let i = 0; i < safeMoves.length; i++) {
+          const e = safeMoves[i];
+          e.color = activeColor;
+          const evaluation = minimaxAlphaBeta(depth - 1, true, alpha, beta, aiColor, oppColor);
+          e.color = COLOR_UNCOLORED;
+          minEval = Math.min(minEval, evaluation);
+          beta = Math.min(beta, evaluation);
+          if (beta <= alpha) break; // Alpha cut-off
+        }
+        return minEval;
+      }
+    }
+
+    function evaluateBoardPosition(aiColor, oppColor) {
+      let aiSafeCount = 0;
+      let oppSafeCount = 0;
+      let doubleMineCount = 0;
+
+      edges.forEach(e => {
+        if (e.color === COLOR_UNCOLORED) {
+          const aiHazard = formsMonochromaticTriangle(e.u, e.v, aiColor, edges);
+          const oppHazard = formsMonochromaticTriangle(e.u, e.v, oppColor, edges);
+
+          if (!aiHazard) aiSafeCount++;
+          if (!oppHazard) oppSafeCount++;
+          if (aiHazard && oppHazard) doubleMineCount++;
+        }
+      });
+
+      // Score balance: freedom of moves for AI minus opponent freedom, with parity Zugzwang
+      return (aiSafeCount * 30) - (oppSafeCount * 38) + (doubleMineCount * 12);
+    }
+
+    /* -------------------------------------------------------------------------
+       DASHBOARD, NOTATION LOG, & UI SYNCHRONIZATION
+       ------------------------------------------------------------------------- */
+    function updateDashboardUI() {
+      const minesStats = analyzeMines(edges);
+
+      // 1. HUD Stats
+      document.getElementById('hudTurnCounter').textContent = `#${movesHistory.length}`;
+      document.getElementById('hudFirstPlayerLabel').textContent = firstPlayer === COLOR_RED ? '紅方' : '藍方';
+      document.getElementById('hudFirstPlayerLabel').style.color = firstPlayer === COLOR_RED ? 'var(--player-red)' : 'var(--player-blue)';
+      document.getElementById('logFirstPlayerText').textContent = firstPlayer === COLOR_RED ? '紅方 (Player 1 / Red)' : '藍方 (Player 2 / Blue)';
+      document.getElementById('logFirstPlayerText').style.color = firstPlayer === COLOR_RED ? 'var(--player-red)' : 'var(--player-blue)';
+
+      updateTurnIndicator(false);
+
+      // 2. Radar Tile Numbers
+      document.getElementById('statDoubleMinesCount').textContent = minesStats.doubleMines;
+      document.getElementById('statRedMinesCount').textContent = minesStats.redMines;
+      document.getElementById('statBlueMinesCount').textContent = minesStats.blueMines;
+      document.getElementById('statSafeEdgesCount').textContent = minesStats.safeEdges;
+      document.getElementById('statRemainingEdgesCount').textContent = minesStats.uncoloredCount;
+      document.getElementById('statTotalEdgesCount').textContent = edges.length;
+
+      // 3. Active Double Mines Cloud
+      const cloud = document.getElementById('activeMinesCloud');
+      if (minesStats.activeDoubleMinePairs.length === 0) {
+        cloud.innerHTML = '<span style="font-size: 0.775rem; color: var(--on-surface-muted);">目前圖面上尚未產生雙重地雷邊</span>';
+      } else {
+        cloud.innerHTML = '';
+        minesStats.activeDoubleMinePairs.forEach(p => {
+          const pill = document.createElement('button');
+          pill.className = 'mine-interactive-pill';
+          pill.innerHTML = `<i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i> ${formatDoubleMineTag(p.u, p.v)}`;
+          pill.onclick = () => highlightEdge(p.edgeId);
+          cloud.appendChild(pill);
+        });
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // 4. Update Move Log Table
+      const tableBody = document.getElementById('moveLogTableBody');
+      if (movesHistory.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--on-surface-muted); padding: 2rem;">等待對局開始，點擊畫布任意灰色邊進行著色...</td></tr>`;
+      } else {
+        tableBody.innerHTML = '';
+        movesHistory.forEach((record, idx) => {
+          const tr = document.createElement('tr');
+          tr.className = `move-row ${idx === historyIndex ? 'current-step' : ''}`;
+          tr.onclick = () => jumpToHistoryStep(idx);
+
+          // Columns: Step # | Player | Edge (u,v)C | Double-mines [u,v] | Status
+          const playerBadgeClass = record.player === COLOR_RED ? 'badge-red' : 'badge-blue';
+          const playerName = record.player === COLOR_RED ? '紅方' : '藍方';
+
+          const doubleMineHtml = record.newDoubleMines && record.newDoubleMines.length > 0
+            ? record.newDoubleMines.map(m => `<span class="double-mine-tag">⚠️ ${formatDoubleMineTag(m.u, m.v)}</span>`).join(' ')
+            : '<span style="color: var(--on-surface-muted); font-size: 0.725rem;">—</span>';
+
+          let statusTag = '';
+          if (record.wasSuicide) {
+            statusTag = `<span style="color: var(--error); font-weight: 700;">☠️ 踩雷落敗</span>`;
+          } else if (record.newDoubleMines && record.newDoubleMines.length > 0) {
+            statusTag = `<span style="color: var(--warning); font-weight: 600;">⚡ 封鎖埋雷</span>`;
+          } else {
+            statusTag = `<span style="color: var(--tertiary);">安全推進</span>`;
+          }
+
+          tr.innerHTML = `
+            <td>#${record.stepNumber}</td>
+            <td><span class="move-color-badge ${playerBadgeClass}">${playerName}</span></td>
+            <td><strong>${formatEdgeNotation(record.u, record.v, record.colorCode)}</strong></td>
+            <td>${doubleMineHtml}</td>
+            <td>${statusTag}</td>
+          `;
+
+          tableBody.appendChild(tr);
+        });
+
+        // Scroll to latest move
+        const logContainer = tableBody.closest('.move-log-container');
+        if (logContainer) logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      // 5. Update Notation Stream Display
+      const notationDisplay = document.getElementById('notationStreamDisplay');
+      if (movesHistory.length === 0) {
+        notationDisplay.textContent = `[對局開始] 先手: ${firstPlayer === COLOR_RED ? '紅方' : '藍方'} | K${nVertices} 完全圖`;
+      } else {
+        const streamText = movesHistory.map(m => {
+          const tag = m.newDoubleMines && m.newDoubleMines.length > 0
+            ? ` ${m.newDoubleMines.map(d => formatDoubleMineTag(d.u, d.v)).join('')}`
+            : '';
+          return `${m.stepNumber}. ${formatEdgeNotation(m.u, m.v, m.colorCode)}${tag}`;
+        }).join('  ');
+        notationDisplay.textContent = `先手:${firstPlayer === COLOR_RED ? '紅方' : '藍方'} | ` + streamText;
+      }
+
+      // 6. Adjacency Matrix
+      renderAdjacencyMatrix();
+
+      // 7. Undo / Redo Buttons state
+      const undoBtn = document.getElementById('undoBtn');
+      const redoBtn = document.getElementById('redoBtn');
+      if (undoBtn) undoBtn.disabled = (historyIndex < 0);
+      if (redoBtn) redoBtn.disabled = (historyIndex >= movesHistory.length - 1);
+    }
+
+    function updateTurnIndicator(isAiThinking = false) {
+      const turnBadge = document.getElementById('currentTurnBadge');
+      const turnText = document.getElementById('turnPlayerText');
+
+      turnBadge.classList.remove('red-turn', 'blue-turn', 'game-over-turn');
+
+      if (gameOver) {
+        turnBadge.classList.add('game-over-turn');
+        if (winner === 'DRAW') {
+          turnText.textContent = '平局結束 (Draw)';
+        } else {
+          turnText.textContent = (winner === COLOR_RED) ? '紅方獲勝！' : '藍方獲勝！';
+        }
+      } else {
+        if (currentPlayer === COLOR_RED) {
+          turnBadge.classList.add('red-turn');
+          turnText.textContent = isAiThinking && gameMode !== '2p' && humanColor !== COLOR_RED ? '紅方 (AI 思考中...)' : '紅方回合';
+        } else {
+          turnBadge.classList.add('blue-turn');
+          turnText.textContent = isAiThinking && gameMode !== '2p' && humanColor !== COLOR_BLUE ? '藍方 (AI 思考中...)' : '藍方回合';
+        }
+      }
+    }
+
+    function renderAdjacencyMatrix() {
+      const container = document.getElementById('adjacencyMatrixContainer');
+      let html = '<table class="adj-matrix-table"><thead><tr><th></th>';
+
+      for (let i = 0; i < nVertices; i++) {
+        html += `<th>${formatNode(i)}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i < nVertices; i++) {
+        html += `<tr><th>${formatNode(i)}</th>`;
+        for (let j = 0; j < nVertices; j++) {
+          if (i === j) {
+            html += '<td style="background: var(--surface-container-high); color: var(--on-surface-muted);">—</td>';
+          } else {
+            const edge = getEdge(i, j);
+            if (!edge) {
+              html += '<td></td>';
+            } else if (edge.color === COLOR_RED) {
+              html += '<td class="matrix-cell-red" title="紅方已著色">R</td>';
+            } else if (edge.color === COLOR_BLUE) {
+              html += '<td class="matrix-cell-blue" title="藍方已著色">B</td>';
+            } else if (edge.isDoubleMine) {
+              html += `<td class="matrix-cell-double-mine" onclick="highlightEdge(${edge.id})" title="雙重地雷 [${formatNode(i)},${formatNode(j)}]">⚠️</td>`;
+            } else {
+              html += `<td class="matrix-cell-empty" onclick="handleEdgeClick(${edge.id})" title="未著色邊 (點擊著色)">·</td>`;
+            }
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    /* -------------------------------------------------------------------------
+       GAME OVER MODAL & TOAST ALERTS
+       ------------------------------------------------------------------------- */
+    function showGameOverDialog(winnerColor, loserColor, tri) {
+      const modal = document.getElementById('gameOverModal');
+      const icon = document.getElementById('dialogIcon');
+      const title = document.getElementById('dialogTitle');
+      const desc = document.getElementById('dialogDesc');
+      const detail = document.getElementById('dialogDetailText');
+
+      icon.classList.remove('winner-red', 'winner-blue', 'winner-draw');
+
+      if (winnerColor === 'DRAW') {
+        icon.classList.add('winner-draw');
+        icon.innerHTML = '<i data-lucide="scale" style="width: 32px; height: 32px;"></i>';
+        title.textContent = '和局達成！(Draw)';
+        desc.textContent = `在 K${nVertices} 完全圖的所有 ${edges.length} 條邊皆已著色完畢，雙方皆未形成單色三角形！`;
+        detail.innerHTML = `驗證了拉姆齊定理：$K_5$ 完全圖允許雙方各自形成 5-環（$C_5$）達到零三角形和局。`;
+      } else {
+        const winnerName = (winnerColor === COLOR_RED) ? '紅方' : '藍方';
+        const loserName = (loserColor === COLOR_RED) ? '紅方' : '藍方';
+        icon.classList.add(winnerColor === COLOR_RED ? 'winner-red' : 'winner-blue');
+        icon.innerHTML = '<i data-lucide="trophy" style="width: 32px; height: 32px;"></i>';
+        title.textContent = `${winnerName} 獲得勝利！`;
+        desc.textContent = `${loserName} 不得不完成單色同色三角形，依反向博弈（Avoidance Game）規則落敗！`;
+
+        if (tri && tri.length === 3) {
+          const uStr = formatNode(tri[0]);
+          const vStr = formatNode(tri[1]);
+          const wStr = formatNode(tri[2]);
+          detail.innerHTML = `💥 致命單色三角形頂點：<strong>{ ${uStr}, ${vStr}, ${wStr} }</strong><br>邊構成：(${uStr},${vStr}), (${vStr},${wStr}), (${uStr},${wStr})`;
+        }
+      }
+
+      modal.classList.add('show');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeGameOverModal() {
+      const modal = document.getElementById('gameOverModal');
+      modal.classList.remove('show');
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast-pill';
+      toast.innerHTML = `<i data-lucide="info" style="width: 14px; height: 14px; color: var(--primary);"></i> <span>${msg}</span>`;
+      container.appendChild(toast);
+      if (window.lucide) lucide.createIcons();
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-8px)';
+        toast.style.transition = 'opacity 0.2s, transform 0.2s';
+        setTimeout(() => toast.remove(), 250);
+      }, 2800);
+    }
+
+    function copyMoveLogText() {
+      const header = `[拉姆齊博弈 Sim 對局記錄] 完全圖: K${nVertices} | 先手: ${firstPlayer === COLOR_RED ? '紅方 (P1)' : '藍方 (P2)'} | 模式: ${gameMode}`;
+      const movesText = movesHistory.map(m => {
+        const tag = m.newDoubleMines && m.newDoubleMines.length > 0 ? ` [${m.newDoubleMines.map(d => `${formatNode(d.u)},${formatNode(d.v)}`).join(' ')}]` : '';
+        return `${m.stepNumber}. (${formatNode(m.u)},${formatNode(m.v)})${m.colorCode}${tag}`;
+      }).join('\n');
+
+      const outcome = gameOver
+        ? (winner === 'DRAW' ? '結果: 和局 (Draw)' : `結果: ${winner === COLOR_RED ? '紅方勝' : '藍方勝'} (${loser === COLOR_RED ? '紅方完成單色三角形' : '藍方完成單色三角形'})`)
+        : '結果: 進行中';
+
+      const fullRecord = `${header}\n\n著手歷程：\n${movesText || '(尚無著手)'}\n\n${outcome}`;
+
+      navigator.clipboard.writeText(fullRecord).then(() => {
+        showToast('棋譜已成功複製至剪貼簿！');
+      }).catch(() => {
+        showToast('複製失敗，請手動複製下方文字框');
+      });
+    }
+
+    /* -------------------------------------------------------------------------
+       CONFIG CONTROLS (Mode, Graph Size, AI Level, Label Format)
+       ------------------------------------------------------------------------- */
+    function setGameMode(mode) {
+      gameMode = mode;
+      document.getElementById('modeBtn2P').classList.toggle('btn-active', mode === '2p');
+      document.getElementById('modeBtnVsAi').classList.toggle('btn-active', mode === 'vs-ai');
+      document.getElementById('modeBtnAiVsAi').classList.toggle('btn-active', mode === 'ai-vs-ai');
+
+      const aiGroup = document.getElementById('aiConfigGroup');
+      aiGroup.style.display = (mode === 'vs-ai' || mode === 'ai-vs-ai') ? 'flex' : 'none';
+
+      confirmResetGame();
+      showToast(`已切換模式為：${mode === '2p' ? '雙人本機對弈' : mode === 'vs-ai' ? '單人對戰 AI' : 'AI 演算法觀戰演示'}`);
+    }
+
+    function changeAiLevel(lvl) {
+      aiLevel = lvl;
+      showToast(`AI 難度已設為：${lvl === 'master' ? '大師級 (Minimax 前瞻)' : lvl === 'tactician' ? '進階級 (度數平衡)' : '初階級 (規避三角)'}`);
+    }
+
+    function toggleHumanColor() {
+      humanColor = (humanColor === COLOR_RED) ? COLOR_BLUE : COLOR_RED;
+      const btn = document.getElementById('humanColorToggleBtn');
+      btn.textContent = humanColor === COLOR_RED ? '執紅 (先手)' : '執藍 (後手)';
+      btn.style.color = humanColor === COLOR_RED ? 'var(--player-red)' : 'var(--player-blue)';
+      confirmResetGame();
+    }
+
+    function changeGraphSize(newSize) {
+      if (newSize === nVertices) return;
+      nVertices = newSize;
+      initializeGraphTopology(nVertices);
+      renderSvgElements();
+      confirmResetGame();
+      showToast(`已切換完全圖規模為 K${nVertices}（共 ${edges.length} 條邊）`);
+    }
+
+    function changeLabelFormat(fmt) {
+      labelFormat = fmt;
+      renderSvgElements();
+      updateDashboardUI();
+      showToast(`標籤格式已切換為：${fmt === '1-based' ? '1～N (台港標準)' : fmt === '0-based' ? '0～N-1 (CS索引)' : 'A～F (字母)'}`);
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundToggleBtn');
+      btn.innerHTML = soundEnabled ? '<i data-lucide="volume-2" style="width: 13px; height: 13px;"></i>' : '<i data-lucide="volume-x" style="width: 13px; height: 13px; color: var(--error);"></i>';
+      if (window.lucide) lucide.createIcons();
+      showToast(soundEnabled ? '音效已開啟' : '音效已靜音');
+    }
+
+    function toggleSafetyPreview() {
+      safetyPreviewEnabled = !safetyPreviewEnabled;
+      const btn = document.getElementById('safetyPreviewToggle');
+      btn.innerHTML = safetyPreviewEnabled
+        ? '<i data-lucide="shield-alert" style="width: 12px; height: 12px; color: var(--tertiary);"></i> 著手預警: 開'
+        : '<i data-lucide="shield-off" style="width: 12px; height: 12px; color: var(--on-surface-muted);"></i> 著手預警: 關';
+      if (window.lucide) lucide.createIcons();
+      showToast(safetyPreviewEnabled ? '已開啟懸停地雷預警提示' : '已關閉懸停地雷預警提示');
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      if (tabId === 'log') {
+        document.getElementById('tabBtnLog').classList.add('active');
+        document.getElementById('tabLogContent').classList.add('active');
+      } else if (tabId === 'radar') {
+        document.getElementById('tabBtnRadar').classList.add('active');
+        document.getElementById('tabRadarContent').classList.add('active');
+      } else if (tabId === 'theory') {
+        document.getElementById('tabBtnTheory').classList.add('active');
+        document.getElementById('tabTheoryContent').classList.add('active');
+      }
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (evt) => {
+      if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === 'z') {
+        evt.preventDefault();
+        if (evt.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === 'y') {
+        evt.preventDefault();
+        handleRedo();
+      } else if (evt.key.toLowerCase() === 'r' && !evt.ctrlKey && !evt.metaKey) {
+        confirmResetGame();
+      }
+    });
+
+    /* -------------------------------------------------------------------------
+       STATE PERSISTENCE (Gemini Notebook Shim API)
+       ------------------------------------------------------------------------- */
+    async function persistState() {
+      if (window.notebookAppApi && window.notebookAppApi.setAppState) {
+        try {
+          const stateToSave = {
+            nVertices,
+            labelFormat,
+            gameMode,
+            aiLevel,
+            humanColor,
+            firstPlayer,
+            soundEnabled,
+            safetyPreviewEnabled,
+            nodePositions: nodes.map(n => ({ id: n.id, x: n.x, y: n.y }))
+          };
+          await window.notebookAppApi.setAppState(stateToSave);
+        } catch (e) {
+          // Persistence fallback
+        }
+      }
+    }
+
+    async function loadPersistedState() {
+      if (window.notebookAppApi && window.notebookAppApi.getAppState) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved) {
+            if (saved.nVertices) nVertices = saved.nVertices;
+            if (saved.labelFormat) labelFormat = saved.labelFormat;
+            if (saved.gameMode) gameMode = saved.gameMode;
+            if (saved.aiLevel) aiLevel = saved.aiLevel;
+            if (saved.humanColor) humanColor = saved.humanColor;
+            if (saved.soundEnabled !== undefined) soundEnabled = saved.soundEnabled;
+            if (saved.safetyPreviewEnabled !== undefined) safetyPreviewEnabled = saved.safetyPreviewEnabled;
+
+            document.getElementById('graphSelect').value = nVertices.toString();
+            document.getElementById('labelFormatSelect').value = labelFormat;
+            document.getElementById('aiLevelSelect').value = aiLevel;
+
+            initializeGraphTopology(nVertices);
+
+            if (saved.nodePositions && saved.nodePositions.length === nVertices) {
+              saved.nodePositions.forEach((pos, idx) => {
+                if (nodes[idx]) {
+                  nodes[idx].x = pos.x;
+                  nodes[idx].y = pos.y;
+                }
+              });
+            }
+
+            renderSvgElements();
+            updateDashboardUI();
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Default Initialization
+      initializeGraphTopology(nVertices);
+      renderSvgElements();
+      updateDashboardUI();
+    }
+
+    // App Initialization
+    // Immediate Synchronous Initialization:
+    // Ensures all nodes, edges, SVG elements, HUD counters, and icons
+    // are completely initialized upon script evaluation without waiting for DOMContentLoaded
+    initializeGraphTopology(nVertices);
+    renderSvgElements();
+    updateDashboardUI();
+    if (window.lucide) lucide.createIcons();
+
+    // Lifecycle listener for state restoration & app readiness notification
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadPersistedState();
+      if (window.lucide) lucide.createIcons();
+      if (window.notebookAppApi && window.notebookAppApi.notifyAppReady) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    });
+
+  </script>
+</body>
+</html>
