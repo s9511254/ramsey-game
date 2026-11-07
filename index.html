@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramsey 避讓遊戲 (K₆ 實驗室 v8)</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #212529;
+    margin: 0;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+  }
+  .ramsey-app {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    max-width: 980px;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  /* 左側：棋盤與控制區 */
+  .left-panel {
+    flex: 1 1 540px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+  }
+  .ramsey-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 2px;
+    text-align: center;
+  }
+  .ramsey-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .rule-banner {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .ramsey-toolbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    background: #f8fafc;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  .ramsey-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s ease;
+  }
+  .btn-red { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
+  .btn-red.active { background: #dc2626; color: #fff; border-color: #991b1b; }
+  .btn-blue { background: #eff6ff; color: #2563eb; border-color: #93c5fd; }
+  .btn-blue.active { background: #2563eb; color: #fff; border-color: #1e40af; }
+  .btn-auto { background: #fefce8; color: #ca8a04; border-color: #fef08a; }
+  .btn-auto.active { background: #ca8a04; color: #fff; border-color: #854d0e; }
+  .btn-erase { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+  .btn-erase.active { background: #475569; color: #fff; }
+
+  .btn-action { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; }
+  .btn-action:hover { background: #f1f5f9; }
+  .btn-action:disabled { opacity: 0.4; cursor: not-allowed; background: #e2e8f0; }
+
+  .select-box {
+    padding: 4px 6px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    background: #fff;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .ramsey-svg {
+    width: 100%;
+    height: 370px;
+    background: #fafafa;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .ramsey-status {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #166534;
+  }
+  .ramsey-status.warning {
+    background: #fffbebfb;
+    border-left-color: #d97706;
+    color: #92400e;
+  }
+  .ramsey-status.danger {
+    background: #fef2f2;
+    border-left-color: #dc2626;
+    color: #991b1b;
+  }
+
+  /* 右側：紀錄區 */
+  .right-panel {
+    flex: 0 0 340px;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-left: 1px solid #e2e8f0;
+    padding-left: 16px;
+  }
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .history-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .copy-btn {
+    padding: 4px 10px;
+    background: #0f172a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .copy-btn:hover {
+    background: #334155;
+  }
+  .history-box {
+    flex: 1;
+    min-height: 440px;
+    max-height: 520px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #1e293b;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .turn-indicator {
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+  .turn-user { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .turn-ai { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+
+  /* 快選顏色彈窗 (Pop-up Color Selector) */
+  .color-modal-overlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.35);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    border-radius: 12px;
+    justify-content: center;
+    align-items: center;
+  }
+  .color-modal {
+    background: #ffffff;
+    padding: 18px 22px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    text-align: center;
+    max-width: 320px;
+    width: 90%;
+    border: 1px solid #e2e8f0;
+  }
+  .color-modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+  .color-modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .btn-pick-red {
+    flex: 1;
+    padding: 10px 0;
+    background: #dc2626;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(220,38,38,0.3);
+  }
+  .btn-pick-red:hover { background: #b91c1c; }
+
+  .btn-pick-blue {
+    flex: 1;
+    padding: 10px 0;
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  }
+  .btn-pick-blue:hover { background: #1d4ed8; }
+
+  .btn-pick-cancel {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-pick-cancel:hover { background: #e2e8f0; }
+
+  @media (max-width: 820px) {
+    .ramsey-app {
+      flex-direction: column;
+    }
+    .right-panel {
+      border-left: none;
+      border-top: 1px solid #e2e8f0;
+      padding-left: 0;
+      padding-top: 14px;
+      flex: 1 1 auto;
+      width: 100%;
+    }
+    .history-box {
+      min-height: 240px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="ramsey-app">
+  <!-- 選色彈窗 -->
+  <div id="colorModalOverlay" class="color-modal-overlay">
+    <div class="color-modal">
+      <div id="colorModalTitle" class="color-modal-title">連線 (0,1)：請選擇顏色</div>
+      <div class="color-modal-btns">
+        <button class="btn-pick-red" onclick="confirmColorPick('R')">🔴 塗紅線</button>
+        <button class="btn-pick-blue" onclick="confirmColorPick('B')">🔵 塗藍線</button>
+      </div>
+      <button class="btn-pick-cancel" onclick="closeColorModal()">取消連線</button>
+    </div>
+  </div>
+
+  <!-- 左側：對局畫面 -->
+  <div class="left-panel">
+    <div class="ramsey-title">Ramsey 避讓遊戲 (K₆ 實驗室 v8)</div>
+    <div class="ramsey-subtitle">🖱️ 按住數字點可拖拽位置 ｜ 👆 點擊兩點即可選色劃線 ｜ 📜 右側實時紀錄對局</div>
+
+    <div class="rule-banner">
+      💡 規則：任何玩家（或 AI）均非固定顏色！每回合落子皆可自由選擇劃 🔴紅線 或 🔵藍線，先連成同色三角形者輸！
+    </div>
+
+    <div class="ramsey-toolbar">
+      <span>模式：</span>
+      <select id="modeSelect" class="select-box" onchange="onModeChange()">
+        <option value="pve">🤖 單人對抗隨機 AI</option>
+        <option value="pvp">👥 雙人自由對戰</option>
+        <option value="eve">🤖🤖 AI 對戰 AI (每秒一手)</option>
+      </select>
+
+      <span id="firstPlayerSpan">先手：</span>
+      <select id="firstSelect" class="select-box" onchange="resetGame()">
+        <option value="human">👤 玩家先手</option>
+        <option value="ai">🤖 對手先手</option>
+      </select>
+
+      <button id="btnUndo" class="ramsey-btn btn-action" onclick="undo()" disabled>⏮️ 上一步</button>
+      <button id="btnRedo" class="ramsey-btn btn-action" onclick="redo()" disabled>⏭️ 下一步</button>
+
+      <span id="selectModeSpan">選色模式：</span>
+      <button id="btnPrompt" class="ramsey-btn btn-auto active" onclick="setSelectMode('P')">🎯 每手彈窗選色</button>
+      <button id="btnRed" class="ramsey-btn btn-red" onclick="setSelectMode('R')">🔴 鎖定紅</button>
+      <button id="btnBlue" class="ramsey-btn btn-blue" onclick="setSelectMode('B')">🔵 鎖定藍</button>
+      <button id="btnErase" class="ramsey-btn btn-erase" onclick="setSelectMode('E')">🧹 擦</button>
+
+      <button class="ramsey-btn btn-action" onclick="resetGame()">🔄 開新局</button>
+      <button class="ramsey-btn btn-action" onclick="resetCircle()">⭕ 重置圓形</button>
+    </div>
+
+    <svg id="svgCanvas" class="ramsey-svg" viewBox="0 0 520 370" preserveAspectRatio="xMidYMid meet"></svg>
+
+    <div id="statusBox" class="ramsey-status">
+      初始化中...
+    </div>
+  </div>
+
+  <!-- 右側：棋譜紀錄面板 -->
+  <div class="right-panel">
+    <div class="history-header">
+      <div class="history-title">📜 對局紀錄區</div>
+      <button class="copy-btn" onclick="copyHistory()">📋 複製紀錄</button>
+    </div>
+    <div id="historyBox" class="history-box">尚無紀錄</div>
+  </div>
+</div>
+
+<script>
+const N = 6;
+const SVG_NS = "http://www.w3.org/2000/svg";
+let nodes = [];
+let edges = {}; 
+let selectMode = 'P';
+let selectedNode = null;
+let pendingEdge = null;
+
+let isDragging = false;
+let draggedNode = null;
+let dragStartX = 0, dragStartY = 0;
+let hasDraggedFar = false;
+
+// 遊戲狀態與歷史紀錄
+let currentTurn = 'human';
+let isGameOver = false;
+let eveTimer = null;
+
+// 步驟歷史
+let moveLogs = [];
+let historyStack = [];
+let historyIndex = 0;
+
+function clearEVETimer() {
+  if (eveTimer) {
+    clearTimeout(eveTimer);
+    eveTimer = null;
+  }
+}
+
+function initNodes() {
+  const viewBoxWidth = 520;
+  const viewBoxHeight = 370;
+  const cx = viewBoxWidth / 2;
+  const cy = viewBoxHeight / 2;
+  const r = 130;
+  nodes = [];
+  for (let i = 0; i < N; i++) {
+    const angle = (i * 2 * Math.PI / N) - (Math.PI / 2);
+    nodes.push({
+      id: i,
+      x: cx + r * Math.cos(angle),
+      y: cy + r * Math.sin(angle)
+    });
+  }
+}
+
+function setSelectMode(m) {
+  selectMode = m;
+  document.getElementById('btnPrompt').classList.toggle('active', m === 'P');
+  document.getElementById('btnRed').classList.toggle('active', m === 'R');
+  document.getElementById('btnBlue').classList.toggle('active', m === 'B');
+  document.getElementById('btnErase').classList.toggle('active', m === 'E');
+}
+
+function getEdgeKey(u, v) {
+  return u < v ? u + '-' + v : v + '-' + u;
+}
+
+function onModeChange() {
+  clearEVETimer();
+  const mode = document.getElementById('modeSelect').value;
+  const firstSpan = document.getElementById('firstPlayerSpan');
+  const firstSelect = document.getElementById('firstSelect');
+  const selectModeSpan = document.getElementById('selectModeSpan');
+  const btnPrompt = document.getElementById('btnPrompt');
+  const btnRed = document.getElementById('btnRed');
+  const btnBlue = document.getElementById('btnBlue');
+  const btnErase = document.getElementById('btnErase');
+
+  if (mode === 'pvp') {
+    firstSpan.style.display = 'none';
+    firstSelect.style.display = 'none';
+    selectModeSpan.style.display = 'inline';
+    btnPrompt.style.display = 'inline';
+    btnRed.style.display = 'inline';
+    btnBlue.style.display = 'inline';
+    btnErase.style.display = 'inline';
+  } else if (mode === 'eve') {
+    firstSpan.style.display = 'inline';
+    firstSelect.style.display = 'inline';
+    firstSelect.innerHTML = '<option value="ai1">🤖 AI 1 先手</option><option value="ai2">🤖 AI 2 先手</option>';
+    selectModeSpan.style.display = 'none';
+    btnPrompt.style.display = 'none';
+    btnRed.style.display = 'none';
+    btnBlue.style.display = 'none';
+    btnErase.style.display = 'none';
+  } else {
+    firstSpan.style.display = 'inline';
+    firstSelect.style.display = 'inline';
+    firstSelect.innerHTML = '<option value="human">👤 玩家先手</option><option value="ai">🤖 對手先手</option>';
+    selectModeSpan.style.display = 'inline';
+    btnPrompt.style.display = 'inline';
+    btnRed.style.display = 'inline';
+    btnBlue.style.display = 'inline';
+    btnErase.style.display = 'inline';
+  }
+  resetGame();
+}
+
+function checkK3(color, tempEdges) {
+  let triangles = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      for (let k = j + 1; k < N; k++) {
+        if (tempEdges[getEdgeKey(i, j)] === color &&
+            tempEdges[getEdgeKey(j, k)] === color &&
+            tempEdges[getEdgeKey(i, k)] === color) {
+          triangles.push([i, j, k]);
+        }
+      }
+    }
+  }
+  return triangles;
+}
+
+function analyzeBoard(boardEdges = edges) {
+  const redK3 = checkK3('R', boardEdges);
+  const blueK3 = checkK3('B', boardEdges);
+  
+  let doubleMines = [];
+  let redMines = [];
+  let blueMines = [];
+
+  for (let u = 0; u < N; u++) {
+    for (let v = u + 1; v < N; v++) {
+      const key = getEdgeKey(u, v);
+      if (!boardEdges[key]) {
+        const testRed = { ...boardEdges, [key]: 'R' };
+        const createsRedK3 = checkK3('R', testRed).length > 0;
+        
+        const testBlue = { ...boardEdges, [key]: 'B' };
+        const createsBlueK3 = checkK3('B', testBlue).length > 0;
+
+        if (createsRedK3 && createsBlueK3) {
+          doubleMines.push([u, v]);
+        } else if (createsRedK3) {
+          redMines.push([u, v]);
+        } else if (createsBlueK3) {
+          blueMines.push([u, v]);
+        }
+      }
+    }
+  }
+
+  return { redK3, blueK3, doubleMines, redMines, blueMines };
+}
+
+function recordMove(playerLabel, u, v, colorChar, isErase = false) {
+  const stepNum = moveLogs.length + 1;
+  const colorText = colorChar === 'R' ? '🔴紅' : (colorChar === 'B' ? '🔵藍' : '🧹擦除');
+
+  if (isErase) {
+    moveLogs.push(stepNum + ". [" + playerLabel + "] 擦除邊(" + u + "," + v + ")");
+    return;
+  }
+
+  const analysisAfter = analyzeBoard(edges);
+  const isLoss = (analysisAfter.redK3.length > 0 || analysisAfter.blueK3.length > 0);
+
+  let logStr = stepNum + ". [" + playerLabel + "] (" + u + "," + v + ") " + colorText;
+
+  if (isLoss) {
+    let lossDetail = [];
+    if (analysisAfter.redK3.length > 0) {
+      lossDetail.push("紅三角形" + analysisAfter.redK3.map(t => "(" + t.join('-') + ")").join(''));
+    }
+    if (analysisAfter.blueK3.length > 0) {
+      lossDetail.push("藍三角形" + analysisAfter.blueK3.map(t => "(" + t.join('-') + ")").join(''));
+    }
+    logStr += " [💥 踩雷爆彈！(" + lossDetail.join('; ') + ")]";
+  } else {
+    if (analysisAfter.doubleMines.length > 0) {
+      const mineStrs = analysisAfter.doubleMines.map(([a,b]) => "(" + a + "," + b + ")").join('');
+      logStr += " [地雷:" + mineStrs + "]";
+    }
+  }
+
+  moveLogs.push(logStr);
+}
+
+function saveState() {
+  historyStack = historyStack.slice(0, historyIndex + 1);
+  historyStack.push({
+    edges: JSON.parse(JSON.stringify(edges)),
+    currentTurn: currentTurn,
+    isGameOver: isGameOver,
+    moveLogs: [...moveLogs]
+  });
+  historyIndex = historyStack.length - 1;
+  updateUndoRedoBtns();
+  updateHistoryDisplay();
+}
+
+function updateUndoRedoBtns() {
+  document.getElementById('btnUndo').disabled = (historyIndex <= 0);
+  document.getElementById('btnRedo').disabled = (historyIndex >= historyStack.length - 1);
+}
+
+function updateHistoryDisplay() {
+  const box = document.getElementById('historyBox');
+  const mode = document.getElementById('modeSelect').value;
+  const first = document.getElementById('firstSelect').value;
+  
+  let modeName = (mode === 'pve' ? '🤖對抗AI' : (mode === 'eve' ? '🤖🤖AI對戰AI' : '👥雙人自由'));
+  let firstName = '👤玩家';
+  if (mode === 'pve') {
+    firstName = (first === 'human' ? '👤玩家' : '🤖AI');
+  } else if (mode === 'eve') {
+    firstName = (first === 'ai1' ? '🤖AI 1' : '🤖AI 2');
+  }
+
+  let headerInfo = "【對局開啟】模式:" + modeName + " | 先手:" + firstName + "\n----------------------------------------\n";
+  
+  if (moveLogs.length === 0) {
+    box.textContent = headerInfo + "（尚無劃線紀錄）";
+  } else {
+    let content = headerInfo + moveLogs.join("\n");
+    if (isGameOver) {
+      const lastLog = moveLogs[moveLogs.length - 1] || "";
+      let winnerText = "";
+      if (mode === 'pve') {
+        winnerText = lastLog.includes("🤖AI") ? "🎉 恭喜玩家獲得勝利！" : "❌ 玩家踩雷輸棋！";
+      } else if (mode === 'eve') {
+        if (lastLog.includes("🤖AI 1")) {
+          winnerText = "🎉 🤖AI 2 獲得勝利！（AI 1 踩雷爆彈）";
+        } else {
+          winnerText = "🎉 🤖AI 1 獲得勝利！（AI 2 踩雷爆彈）";
+        }
+      } else {
+        winnerText = "🏁 遊戲結束！最後落子者踩雷爆彈。";
+      }
+      content += "\n----------------------------------------\n【終局結果】" + winnerText;
+    }
+    box.textContent = content;
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function copyHistory() {
+  const box = document.getElementById('historyBox');
+  navigator.clipboard.writeText(box.textContent).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const oldText = btn.textContent;
+    btn.textContent = '✅ 已複製！';
+    setTimeout(() => { btn.textContent = oldText; }, 1500);
+  }).catch(() => {
+    alert("複製失敗，請手動框選複製紀錄區文字。");
+  });
+}
+
+function undo() {
+  clearEVETimer();
+  if (historyIndex > 0) {
+    historyIndex--;
+    applyState(historyStack[historyIndex]);
+  }
+}
+
+function redo() {
+  clearEVETimer();
+  if (historyIndex < historyStack.length - 1) {
+    historyIndex++;
+    applyState(historyStack[historyIndex]);
+  }
+}
+
+function applyState(state) {
+  edges = JSON.parse(JSON.stringify(state.edges));
+  currentTurn = state.currentTurn;
+  isGameOver = state.isGameOver;
+  moveLogs = [...state.moveLogs];
+  selectedNode = null;
+  pendingEdge = null;
+  closeColorModal();
+  render();
+  updateUndoRedoBtns();
+  updateHistoryDisplay();
+}
+
+function resetGame() {
+  clearEVETimer();
+  edges = {};
+  selectedNode = null;
+  pendingEdge = null;
+  closeColorModal();
+  isGameOver = false;
+  moveLogs = [];
+  
+  const mode = document.getElementById('modeSelect').value;
+  if (mode === 'pve') {
+    const first = document.getElementById('firstSelect').value;
+    currentTurn = first;
+  } else if (mode === 'eve') {
+    const first = document.getElementById('firstSelect').value;
+    currentTurn = first || 'ai1';
+  } else {
+    currentTurn = 'human';
+  }
+
+  historyStack = [{
+    edges: {},
+    currentTurn: currentTurn,
+    isGameOver: false,
+    moveLogs: []
+  }];
+  historyIndex = 0;
+  
+  if (nodes.length === 0) {
+    initNodes();
+  }
+  updateUndoRedoBtns();
+  render();
+  updateHistoryDisplay();
+
+  if (mode === 'pve' && currentTurn === 'ai') {
+    setTimeout(makeAIMove, 500);
+  } else if (mode === 'eve') {
+    eveTimer = setTimeout(runEVEStep, 1000);
+  }
+}
+
+function resetCircle() {
+  initNodes();
+  selectedNode = null;
+  render();
+}
+
+function runEVEStep() {
+  clearEVETimer();
+  if (isGameOver) return;
+  const mode = document.getElementById('modeSelect').value;
+  if (mode !== 'eve') return;
+
+  let remainingEdges = [];
+  for (let u = 0; u < N; u++) {
+    for (let v = u + 1; v < N; v++) {
+      const key = getEdgeKey(u, v);
+      if (!edges[key]) {
+        remainingEdges.push([u, v]);
+      }
+    }
+  }
+
+  if (remainingEdges.length === 0) return;
+
+  let safeChoices = [];
+  let allChoices = [];
+
+  remainingEdges.forEach(([u, v]) => {
+    const key = getEdgeKey(u, v);
+    ['R', 'B'].forEach(c => {
+      allChoices.push({ u, v, key, color: c });
+      const testEdges = { ...edges, [key]: c };
+      if (checkK3('R', testEdges).length === 0 && checkK3('B', testEdges).length === 0) {
+        safeChoices.push({ u, v, key, color: c });
+      }
+    });
+  });
+
+  let chosen;
+  if (safeChoices.length > 0) {
+    chosen = safeChoices[Math.floor(Math.random() * safeChoices.length)];
+  } else {
+    chosen = allChoices[Math.floor(Math.random() * allChoices.length)];
+  }
+
+  edges[chosen.key] = chosen.color;
+  
+  const playerLabel = (currentTurn === 'ai1') ? '🤖AI 1' : '🤖AI 2';
+  recordMove(playerLabel, chosen.u, chosen.v, chosen.color, false);
+
+  const analysis = analyzeBoard();
+  if (analysis.redK3.length > 0 || analysis.blueK3.length > 0) {
+    isGameOver = true;
+  }
+
+  currentTurn = (currentTurn === 'ai1') ? 'ai2' : 'ai1';
+
+  saveState();
+  render();
+
+  if (!isGameOver) {
+    eveTimer = setTimeout(runEVEStep, 1000);
+  }
+}
+
+function makeAIMove() {
+  if (isGameOver) return;
+
+  const mode = document.getElementById('modeSelect').value;
+  if (mode !== 'pve' || currentTurn !== 'ai') return;
+
+  let remainingEdges = [];
+  for (let u = 0; u < N; u++) {
+    for (let v = u + 1; v < N; v++) {
+      const key = getEdgeKey(u, v);
+      if (!edges[key]) {
+        remainingEdges.push([u, v]);
+      }
+    }
+  }
+
+  if (remainingEdges.length === 0) return;
+
+  let safeChoices = [];
+  let allChoices = [];
+
+  remainingEdges.forEach(([u, v]) => {
+    const key = getEdgeKey(u, v);
+    ['R', 'B'].forEach(c => {
+      allChoices.push({ u, v, key, color: c });
+      const testEdges = { ...edges, [key]: c };
+      if (checkK3('R', testEdges).length === 0 && checkK3('B', testEdges).length === 0) {
+        safeChoices.push({ u, v, key, color: c });
+      }
+    });
+  });
+
+  let chosen;
+  if (safeChoices.length > 0) {
+    chosen = safeChoices[Math.floor(Math.random() * safeChoices.length)];
+  } else {
+    chosen = allChoices[Math.floor(Math.random() * allChoices.length)];
+  }
+
+  edges[chosen.key] = chosen.color;
+  currentTurn = 'human';
+
+  recordMove("🤖AI", chosen.u, chosen.v, chosen.color, false);
+
+  const analysis = analyzeBoard();
+  if (analysis.redK3.length > 0 || analysis.blueK3.length > 0) {
+    isGameOver = true;
+  }
+
+  saveState();
+  render();
+}
+
+function openColorModal(u, v) {
+  pendingEdge = { u, v };
+  document.getElementById('colorModalTitle').textContent = "連線 (" + u + ", " + v + ")：請選擇此手顏色";
+  document.getElementById('colorModalOverlay').style.display = 'flex';
+}
+
+function closeColorModal() {
+  pendingEdge = null;
+  document.getElementById('colorModalOverlay').style.display = 'none';
+}
+
+function confirmColorPick(colorChoice) {
+  if (!pendingEdge) return;
+  const u = pendingEdge.u;
+  const v = pendingEdge.v;
+  closeColorModal();
+  applyMoveColor(u, v, colorChoice);
+}
+
+function applyMoveColor(u, v, chosenColor) {
+  const key = getEdgeKey(u, v);
+  const mode = document.getElementById('modeSelect').value;
+
+  edges[key] = chosenColor;
+  
+  const analysis = analyzeBoard();
+  if (analysis.redK3.length > 0 || analysis.blueK3.length > 0) {
+    isGameOver = true;
+  }
+
+  recordMove(mode === 'pve' ? "👤玩家" : "玩家", u, v, chosenColor, false);
+
+  if (mode === 'pve') {
+    currentTurn = 'ai';
+    saveState();
+    render();
+    if (!isGameOver) {
+      setTimeout(makeAIMove, 500);
+    }
+  } else {
+    saveState();
+    render();
+  }
+}
+
+function render() {
+  const svg = document.getElementById('svgCanvas');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  if (nodes.length === 0) {
+    initNodes();
+  }
+
+  const analysis = analyzeBoard();
+  const drawnCount = Object.keys(edges).length;
+
+  if (analysis.redK3.length > 0 || analysis.blueK3.length > 0) {
+    isGameOver = true;
+  }
+
+  // 1. 底圖未劃線 (雙地雷亮虛線)
+  for (let u = 0; u < N; u++) {
+    for (let v = u + 1; v < N; v++) {
+      const key = getEdgeKey(u, v);
+      if (!edges[key]) {
+        const line = document.createElementNS(SVG_NS, 'line');
+        line.setAttribute('x1', nodes[u].x);
+        line.setAttribute('y1', nodes[u].y);
+        line.setAttribute('x2', nodes[v].x);
+        line.setAttribute('y2', nodes[v].y);
+
+        const isDoubleMine = analysis.doubleMines.some(([a, b]) => (a === u && b === v));
+        if (isDoubleMine) {
+          line.setAttribute('stroke', '#f59e0b');
+          line.setAttribute('stroke-width', '3.5');
+          line.setAttribute('stroke-dasharray', '5 4');
+        } else {
+          line.setAttribute('stroke', '#94a3b8');
+          line.setAttribute('stroke-width', '1.5');
+          line.setAttribute('stroke-dasharray', '4 4');
+        }
+        svg.appendChild(line);
+      }
+    }
+  }
+
+  // 2. 已劃線條
+  for (const [key, color] of Object.entries(edges)) {
+    const [u, v] = key.split('-').map(Number);
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', nodes[u].x);
+    line.setAttribute('y1', nodes[u].y);
+    line.setAttribute('x2', nodes[v].x);
+    line.setAttribute('y2', nodes[v].y);
+    line.setAttribute('stroke', color === 'R' ? '#dc2626' : '#2563eb');
+    line.setAttribute('stroke-width', '4.5');
+    line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  }
+
+  // 3. 頂點與數字
+  nodes.forEach((node) => {
+    const g = document.createElementNS(SVG_NS, 'g');
+    g.style.cursor = 'grab';
+
+    const circle = document.createElementNS(SVG_NS, 'circle');
+    circle.setAttribute('cx', node.x);
+    circle.setAttribute('cy', node.y);
+    circle.setAttribute('r', '18');
+    circle.setAttribute('fill', selectedNode === node.id ? '#fef08a' : '#ffffff');
+    circle.setAttribute('stroke', selectedNode === node.id ? '#eab308' : '#334155');
+    circle.setAttribute('stroke-width', selectedNode === node.id ? '3' : '2');
+
+    const text = document.createElementNS(SVG_NS, 'text');
+    text.setAttribute('x', node.x);
+    text.setAttribute('y', node.y + 5);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('font-weight', 'bold');
+    text.setAttribute('font-size', '14px');
+    text.setAttribute('fill', '#0f172a');
+    text.setAttribute('pointer-events', 'none');
+    text.textContent = node.id;
+
+    g.appendChild(circle);
+    g.appendChild(text);
+
+    g.addEventListener('mousedown', (e) => startDrag(e, node.id));
+    g.addEventListener('touchstart', (e) => startDrag(e, node.id), {passive: false});
+
+    svg.appendChild(g);
+  });
+
+  // 4. 左下戰術診斷區
+  const statusBox = document.getElementById('statusBox');
+  const mode = document.getElementById('modeSelect').value;
+
+  let turnBanner = "";
+  if (mode === 'pve' && !isGameOver) {
+    if (currentTurn === 'human') {
+      turnBanner = '<span class="turn-indicator turn-user">👉 輪到您落子 (👤 玩家回合)</span><br>';
+    } else {
+      turnBanner = '<span class="turn-indicator turn-ai">🤖 對手思考落子中...</span><br>';
+    }
+  } else if (mode === 'eve' && !isGameOver) {
+    const currentName = (currentTurn === 'ai1') ? '🤖 AI 1' : '🤖 AI 2';
+    turnBanner = '<span class="turn-indicator turn-ai">🤖🤖 AI 自動對戰中（目前回合：' + currentName + '，每 1 秒一手）...</span><br>';
+  }
+
+  if (isGameOver) {
+    statusBox.className = 'ramsey-status danger';
+    let msg = '<strong>💥【踩雷爆彈！對局結束】</strong><br>';
+    if (analysis.redK3.length > 0) msg += '🔴 紅色三角形：頂點 ' + analysis.redK3.map(t=>'(' + t.join(',') + ')').join(', ') + '<br>';
+    if (analysis.blueK3.length > 0) msg += '🔵 藍色三角形：頂點 ' + analysis.blueK3.map(t=>'(' + t.join(',') + ')').join(', ') + '<br>';
+    
+    if (mode === 'pve') {
+      if (currentTurn === 'human') {
+        msg += '<strong style="color:#166534; font-size:15px;">🎉 恭喜您獲得勝利！對手踩雷爆彈了！</strong>';
+      } else {
+        msg += '<strong style="color:#991b1b; font-size:15px;">❌ 您踩雷爆彈了，對手獲得勝利！</strong>';
+      }
+    } else if (mode === 'eve') {
+      const lastLog = moveLogs[moveLogs.length - 1] || '';
+      if (lastLog.includes('🤖AI 1')) {
+        msg += '<strong style="color:#166534; font-size:15px;">🎉 🤖 AI 2 獲得勝利！（AI 1 踩雷爆彈）</strong>';
+      } else {
+        msg += '<strong style="color:#166534; font-size:15px;">🎉 🤖 AI 1 獲得勝利！（AI 2 踩雷爆彈）</strong>';
+      }
+    } else {
+      msg += '最後落子者踩雷爆彈。';
+    }
+    statusBox.innerHTML = msg;
+  } else if (analysis.doubleMines.length >= 2) {
+    statusBox.className = 'ramsey-status warning';
+    let msg = turnBanner + '<strong>🔥【雙重地雷 Fork 絕殺觸發！】（已劃 ' + drawnCount + ' 條線）</strong><br>';
+    msg += '盤面已形成 <strong>' + analysis.doubleMines.length + ' 條雙向地雷邊</strong>：';
+    analysis.doubleMines.forEach(([u, v]) => {
+      msg += ' [💣 (' + u + ',' + v + ')]';
+    });
+    msg += '<br>👉 盤面陷入死穴，無論誰劃哪一條地雷邊皆會踩雷爆彈。';
+    statusBox.innerHTML = msg;
+  } else if (analysis.doubleMines.length === 1) {
+    statusBox.className = 'ramsey-status warning';
+    const [u, v] = analysis.doubleMines[0];
+    statusBox.innerHTML = turnBanner + '<strong>⚠️【出現 1 條雙向地雷邊】（已劃 ' + drawnCount + ' 條線）</strong><br>' +
+      '💣 邊 <strong>(' + u + ',' + v + ')</strong> 已成死穴，塗紅塗藍皆會踩雷。';
+  } else {
+    statusBox.className = 'ramsey-status';
+    statusBox.innerHTML = turnBanner + '<strong>⚖️【盤面安全對峙中】（已劃 ' + drawnCount + ' 條線）</strong><br>' +
+      '請點擊兩點連線，或隨時拖拽數字點調整圖形視覺位置。';
+  }
+}
+
+function startDrag(e, nodeId) {
+  e.preventDefault();
+  isDragging = true;
+  draggedNode = nodeId;
+  hasDraggedFar = false;
+  const pt = getEventPos(e);
+  dragStartX = pt.rawX;
+  dragStartY = pt.rawY;
+}
+
+function onMove(e) {
+  if (!isDragging || draggedNode === null) return;
+  const pt = getEventPos(e);
+  const dx = pt.rawX - dragStartX;
+  const dy = pt.rawY - dragStartY;
+
+  if (Math.sqrt(dx*dx + dy*dy) > 4) {
+    hasDraggedFar = true;
+  }
+
+  const svg = document.getElementById('svgCanvas');
+  const viewBoxWidth = 520;
+  const viewBoxHeight = 370;
+  const rect = svg.getBoundingClientRect();
+  
+  const scaleX = viewBoxWidth / rect.width;
+  const scaleY = viewBoxHeight / rect.height;
+  
+  const svgX = (pt.rawX - rect.left) * scaleX;
+  const svgY = (pt.rawY - rect.top) * scaleY;
+
+  nodes[draggedNode].x = Math.max(20, Math.min(viewBoxWidth - 20, svgX));
+  nodes[draggedNode].y = Math.max(20, Math.min(viewBoxHeight - 20, svgY));
+  
+  render();
+}
+
+function endDrag(e) {
+  if (!isDragging) return;
+  if (!hasDraggedFar && draggedNode !== null) {
+    onNodeClick(draggedNode);
+  }
+  isDragging = false;
+  draggedNode = null;
+}
+
+function onNodeClick(nodeId) {
+  if (isGameOver) return;
+  const mode = document.getElementById('modeSelect').value;
+  if (mode === 'eve') return;
+  if (mode === 'pve' && currentTurn !== 'human') return;
+
+  if (selectedNode === null) {
+    selectedNode = nodeId;
+  } else if (selectedNode === nodeId) {
+    selectedNode = null;
+  } else {
+    const key = getEdgeKey(selectedNode, nodeId);
+    const u = selectedNode, v = nodeId;
+
+    if (selectMode === 'E') {
+      if (edges[key]) {
+        delete edges[key];
+        recordMove("玩家", u, v, 'E', true);
+        saveState();
+      }
+      selectedNode = null;
+      render();
+      return;
+    }
+
+    if (edges[key]) {
+      selectedNode = null;
+      render();
+      return;
+    }
+
+    selectedNode = null;
+
+    if (selectMode === 'P') {
+      openColorModal(u, v);
+    } else {
+      applyMoveColor(u, v, selectMode);
+    }
+  }
+  render();
+}
+
+function getEventPos(e) {
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    rawX: clientX,
+    rawY: clientY
+  };
+}
+
+window.addEventListener('mousemove', onMove);
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchmove', onMove, {passive: false});
+window.addEventListener('touchend', endDrag);
+
+document.addEventListener('DOMContentLoaded', () => {
+  initNodes();
+  resetGame();
+});
+
+initNodes();
+resetGame();
+</script>
+</body>
+</html>
